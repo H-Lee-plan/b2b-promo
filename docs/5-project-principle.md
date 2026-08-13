@@ -1,6 +1,7 @@
 # 프로젝트 구조 설계 원칙: 온리원이벤트
 
-- 버전: v1.3 (2026-08-13) — 환경변수명을 `DATABASE_URL`에서 `DB_CONN_STRING`으로 확정(PRD v1.5와 동일), `.env` 위치를 `backend/.env`로 명시
+- 버전: v1.4 (2026-08-13) — 실제 구현 중 `PORT`(기본 3000), `FRONTEND_ORIGIN`(기본 `http://localhost:5173`) 선택 환경변수 추가. 5개 필수 변수와 구분해 명시, CORS 설정을 하드코딩에서 `FRONTEND_ORIGIN` 참조로 변경
+- 버전 이력: v1.3 (2026-08-13) — 환경변수명을 `DATABASE_URL`에서 `DB_CONN_STRING`으로 확정(PRD v1.5와 동일), `.env` 위치를 `backend/.env`로 명시
 - 버전 이력: v1.2 (2026-08-13) — swagger.json 신규 작성에 따른 교차 검토 반영: 1절의 "에러 코드 4개"를 PRD 4절/5절이 이미 확정한 실제 개수(비즈니스 4종 + VALIDATION_ERROR + INTERNAL_ERROR = 6개)와 일치하도록 수정
 - 버전 이력: v1.1 (2026-08-13) — 참여신청 중복 판정을 UNIQUE 위반 예외 catch 방식에서 `INSERT ... ON CONFLICT`로 교체(예외 catch는 PostgreSQL 트랜잭션을 abort시켜 같은 트랜잭션 내 룰렛 추첨이 실패하는 문제가 있었음), 쿼리 함수의 트랜잭션 재사용 패턴(pool/client 공용 인터페이스, release 누락 방지) 명시
 - 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md), [3-prd.md](./3-prd.md)(PRD v1.5), [4-user-scenario.md](./4-user-scenario.md)
@@ -56,12 +57,12 @@ PRD 7절 결정("테스트 자동화 스위트 없음, 룰렛 가중치 추첨�
 
 ## 5. 설정/보안/운영 원칙
 
-- **환경변수**: `backend/.env` 1개, PRD 4절의 5개 변수(`DB_CONN_STRING`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`)만 정의한다. `config/env.js` 한 파일에서 `process.env`를 읽고 누락 시 부팅을 즉시 실패시킨다(런타임 중간에 죽는 것보다 부팅 실패가 3일짜리 프로젝트 디버깅에 유리).
+- **환경변수**: `backend/.env` 1개, PRD 4절의 5개 **필수** 변수(`DB_CONN_STRING`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`)는 하나라도 없으면 부팅을 즉시 실패시킨다(`config/env.js`). `PORT`(기본 3000), `FRONTEND_ORIGIN`(기본 `http://localhost:5173`)은 **선택** 변수로, 코드에 기본값을 두고 `.env`에 없어도 부팅이 실패하지 않는다 — 로컬 포트·프론트 개발 서버 주소처럼 환경마다 달라질 수 있는 값이라 필수 목록에 넣지 않는다.
 - **`.env`는 절대 커밋하지 않는다.** 루트 `.gitignore`에 `.env`가 이미 등록되어 있으므로 그대로 유지하고, 실제 값 대신 키 이름과 예시만 담은 `.env.example`을 커밋해 팀/재설치 시 참고하게 한다. 시크릿이 코드/문서/커밋 이력에 절대 남지 않는 것이 3일짜리 프로젝트에서도 유일하게 타협 불가한 운영 규칙이다.
 - **환경 분리**: 별도의 `.env.development`/`.env.production` 다중 파일 체계를 만들지 않는다. 로컬과 운영 모두 같은 5개 키를 값만 바꿔 쓰는 `.env` 하나로 충분(스테이징 환경 자체가 없음).
 - **JWT**: HS256으로 서명하고 Access/Refresh를 서로 다른 시크릿(`JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET`)으로 분리한다 — 하나가 유출돼도 다른 토큰까지 위조되지 않게 하기 위함이며, 이미 PRD 4절이 시크릿을 2개로 나눠뒀으므로 그 결정을 그대로 따른다. payload에는 `userId`/`role`만 담고 이메일 등 개인정보는 넣지 않는다(토큰은 클라이언트에 그대로 저장되는 값이므로). 서명 검증은 `middleware/auth.js` 한 곳에서만 하고, 나머지 코드는 이 미들웨어를 통과한 `req.user`만 신뢰한다.
 - **비밀번호 해시**: bcrypt, salt rounds 10. 이 규모의 트래픽에서 rounds를 더 올려 로그인 응답을 늦출 이유가 없다. 평문 비밀번호는 로그·에러 메시지 어디에도 남기지 않는다.
-- **CORS**: 운영에서는 Express가 프론트 빌드(`dist/`)를 같은 오리진으로 정적 서빙하므로(4절 배포) CORS 설정 자체가 필요 없다. 로컬 개발에서만 Vite dev 서버(다른 포트)가 API를 호출하므로, 개발 환경에 한해 `cors` 미들웨어에 그 dev 오리진 하나만 허용 목록으로 넣는다. 쿠키를 쓰지 않으므로(4절) `credentials: true`나 와일드카드(`*`)는 쓰지 않는다.
+- **CORS**: 운영에서는 Express가 프론트 빌드(`dist/`)를 같은 오리진으로 정적 서빙하므로(4절 배포) CORS 설정 자체가 필요 없다. 로컬 개발에서만 Vite dev 서버(다른 포트)가 API를 호출하므로, 개발 환경(`NODE_ENV !== 'production'`)에 한해 `cors` 미들웨어에 `FRONTEND_ORIGIN`(기본값 `http://localhost:5173`) 오리진 하나만 허용 목록으로 넣는다. 쿠키를 쓰지 않으므로(4절) `credentials: true`나 와일드카드(`*`)는 쓰지 않는다.
 - **에러 핸들링**: PRD 4절 포맷 `{ "error": { "code": "STRING_CODE", "message": "..." } }`을 Express 공통 에러 미들웨어 1개(`middleware/errorHandler.js`)에서만 생성한다. 개별 핸들러는 `throw new AppError('DUPLICATE_ENTRY', '...')` 형태로 던지기만 하고 응답 형식을 직접 만들지 않는다. 기존 4개 코드(`DUPLICATE_ENTRY`/`TARGET_TYPE_MISMATCH`/`EVENT_CLOSED`/`CONSENT_REQUIRED`)에 입력 검증 실패용 `VALIDATION_ERROR`(400)를 더한다. 그 외 예상 못한 예외는 전부 이 미들웨어가 500 + `INTERNAL_ERROR`로 통일 응답하고, 실제 에러 스택은 서버 로그에만 남기며 클라이언트 응답에는 절대 포함하지 않는다.
 - **로깅**: Winston/Pino 등 로깅 라이브러리를 도입하지 않는다. 요청 단위로 `메서드 경로 상태코드 응답시간`을 한 줄 남기는 미들웨어 하나(5줄 내외)와, 500 에러 발생 시 스택을 `console.error`로 남기는 것으로 충분하다. 비밀번호·JWT 토큰·이메일/연락처 등 개인정보는 어떤 로그에도 남기지 않는다. 로그는 파일로 수집하지 않고 `pm2`의 표준출력 로그(`pm2 logs`)로 확인한다 — 3일 프로젝트에 로그 수집 인프라(ELK 등)는 과하다.
 - **입력 검증**: Zod/Joi 같은 검증 라이브러리를 도입하지 않는다. 각 핸들러 진입부에서 필수 필드 존재 여부와 도메인 정의서 4절의 형식 규칙(이메일 형식, 비밀번호 8자 이상, 연락처 형식, `weight` 1 이상 정수)만 if문으로 직접 검사하고, 실패 시 `VALIDATION_ERROR`(400)로 응답한다. 검증 로직이 늘어나 핸들러가 지저분해지는 시점(예: 필드 5개 이상)이 오면 그때 해당 엔티티 하나에 한해 검증 함수를 분리한다.

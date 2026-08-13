@@ -139,10 +139,11 @@ flowchart LR
 - `src/server.js`: Express 초기화, 포트 리슨, 헬스체크 라우트 1개
 
 **완료 조건**
-- [ ] `npm start`로 서버가 기동되고 헬스체크 요청에 200을 응답한다
-- [ ] `.env`에서 변수 하나를 지우면 서버가 부팅 단계에서 즉시 실패한다
-- [ ] `pool.js`를 통해 DB에 실제 쿼리(`SELECT 1`)가 성공한다
-- [ ] 마이그레이션 툴·ORM을 설치하지 않았다(원칙 1절)
+- [x] `npm start`로 서버가 기동되고 헬스체크 요청에 200을 응답한다 (`GET /health` → `{"status":"ok"}`)
+- [x] `.env`에서 변수 하나를 지우면 서버가 부팅 단계에서 즉시 실패한다 (`JWT_ACCESS_SECRET` 제거 후 실행 → 누락 메시지 출력 + exit code 1 확인, `.env` 원상 복구 완료)
+- [x] `pool.js`를 통해 DB에 실제 쿼리(`SELECT 1`)가 성공한다 (`[{"?column?":1}]` 반환 확인)
+- [x] 마이그레이션 툴·ORM을 설치하지 않았다(원칙 1절) — 의존성 6개(`bcrypt`/`dotenv`/`express`/`jsonwebtoken`/`pg`/`cors`)뿐, ORM/마이그레이션 툴 없음
+- [x] (추가 검증) `src/config/env.js`/`src/db/pool.js`/`src/server.js` 자체 테스트 10건 전부 통과, 라인/브랜치/함수 커버리지 100%(`node --test --experimental-test-coverage`)
 
 ---
 
