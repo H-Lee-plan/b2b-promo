@@ -39,6 +39,7 @@
 | 단순 참여/폼 제출형/룰렛 게임형 | `SIMPLE` / `FORM` / `ROULETTE` |
 | 등록/진행중/종료 | `SCHEDULED` / `ONGOING` / `CLOSED` |
 | 신청완료/취소/당첨/미당첨 | `APPLIED` / `CANCELED` / `WON` / `LOST` |
+| 관리자/일반 참여자 | `ADMIN` / `MEMBER` |
 
 - 이 상수는 프론트·백엔드 각각 한 군데(백엔드는 `shared/enums.js`, 프론트는 같은 값을 `constants/domain.js`에 복사)에만 선언한다. 코드 공유 패키지(모노레포 workspace 등)는 3일 프로젝트에 과하므로 값 복사로 충분히 해결한다.
 
@@ -119,7 +120,7 @@ backend/
       env.js                     # .env 5개 변수 로드 및 검증
     db/
       pool.js                    # pg Pool
-      schema.sql                 # users/events/prizes/entries/refresh_tokens + UNIQUE 제약
+      schema.sql                 # users/events/prizes/entries/refresh_tokens + UNIQUE 제약(내용은 docs/8-schema.sql을 그대로 복사)
       seed.js                    # 관리자 계정 시딩(FR-1.0, bcrypt)
       rowMapper.js                # snake_case row → camelCase 객체 변환 공용 함수
     shared/

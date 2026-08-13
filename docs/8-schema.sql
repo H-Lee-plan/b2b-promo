@@ -1,6 +1,7 @@
 -- 온리원이벤트 스키마
--- 관련 문서: 8-erd.md, 1-domain-definition.md(v1.5) 4~7절, 5-project-principle.md 3·7절
+-- 관련 문서: 8-erd.md, 1-domain-definition.md(v1.6) 4~7절, 5-project-principle.md 3·7절
 -- 마이그레이션 툴 없이 이 파일 1개로 관리한다(5-project-principle.md 7절). 시드 데이터는 seed.js 몫.
+-- 이 파일이 최종 산출물이며, 실제 구현 시 내용 그대로 backend/src/db/schema.sql로 복사해 사용한다(두 경로는 같은 내용, 다른 위치일 뿐 별개 스키마가 아니다).
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 

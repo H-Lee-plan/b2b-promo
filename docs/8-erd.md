@@ -60,7 +60,7 @@ erDiagram
     refresh_tokens {
         uuid id PK
         uuid user_id FK
-        string token_hash
+        string token_hash UK
         datetime expires_at
     }
 ```
