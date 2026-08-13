@@ -1,8 +1,9 @@
 # 프로젝트 구조 설계 원칙: 온리원이벤트
 
-- 버전: v1.2 (2026-08-13) — swagger.json 신규 작성에 따른 교차 검토 반영: 1절의 "에러 코드 4개"를 PRD 4절/5절이 이미 확정한 실제 개수(비즈니스 4종 + VALIDATION_ERROR + INTERNAL_ERROR = 6개)와 일치하도록 수정
+- 버전: v1.3 (2026-08-13) — 환경변수명을 `DATABASE_URL`에서 `DB_CONN_STRING`으로 확정(PRD v1.5와 동일), `.env` 위치를 `backend/.env`로 명시
+- 버전 이력: v1.2 (2026-08-13) — swagger.json 신규 작성에 따른 교차 검토 반영: 1절의 "에러 코드 4개"를 PRD 4절/5절이 이미 확정한 실제 개수(비즈니스 4종 + VALIDATION_ERROR + INTERNAL_ERROR = 6개)와 일치하도록 수정
 - 버전 이력: v1.1 (2026-08-13) — 참여신청 중복 판정을 UNIQUE 위반 예외 catch 방식에서 `INSERT ... ON CONFLICT`로 교체(예외 catch는 PostgreSQL 트랜잭션을 abort시켜 같은 트랜잭션 내 룰렛 추첨이 실패하는 문제가 있었음), 쿼리 함수의 트랜잭션 재사용 패턴(pool/client 공용 인터페이스, release 누락 방지) 명시
-- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md), [3-prd.md](./3-prd.md)(PRD v1.4), [4-user-scenario.md](./4-user-scenario.md)
+- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md), [3-prd.md](./3-prd.md)(PRD v1.5), [4-user-scenario.md](./4-user-scenario.md)
 - **이 문서의 역할**: PRD 4절에서 이미 확정된 기술 스택(React 19 + Zustand + TanStack Query / Node.js + Express + `pg` / PostgreSQL 17 / 쿠키 없는 Access·Refresh JWT)을 그대로 전제하고, "그 스택으로 코드를 어떻게 배치할지"만 다룬다. 스택 재논의·신규 도구 도입 제안은 이 문서의 범위가 아니다.
 
 ## 1. 모든 스택에 공통인 최상위 원칙
@@ -55,7 +56,7 @@ PRD 7절 결정("테스트 자동화 스위트 없음, 룰렛 가중치 추첨�
 
 ## 5. 설정/보안/운영 원칙
 
-- **환경변수**: `.env` 1개, PRD 4절의 5개 변수(`DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`)만 정의한다. `config/env.js` 한 파일에서 `process.env`를 읽고 누락 시 부팅을 즉시 실패시킨다(런타임 중간에 죽는 것보다 부팅 실패가 3일짜리 프로젝트 디버깅에 유리).
+- **환경변수**: `backend/.env` 1개, PRD 4절의 5개 변수(`DB_CONN_STRING`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`)만 정의한다. `config/env.js` 한 파일에서 `process.env`를 읽고 누락 시 부팅을 즉시 실패시킨다(런타임 중간에 죽는 것보다 부팅 실패가 3일짜리 프로젝트 디버깅에 유리).
 - **`.env`는 절대 커밋하지 않는다.** 루트 `.gitignore`에 `.env`가 이미 등록되어 있으므로 그대로 유지하고, 실제 값 대신 키 이름과 예시만 담은 `.env.example`을 커밋해 팀/재설치 시 참고하게 한다. 시크릿이 코드/문서/커밋 이력에 절대 남지 않는 것이 3일짜리 프로젝트에서도 유일하게 타협 불가한 운영 규칙이다.
 - **환경 분리**: 별도의 `.env.development`/`.env.production` 다중 파일 체계를 만들지 않는다. 로컬과 운영 모두 같은 5개 키를 값만 바꿔 쓰는 `.env` 하나로 충분(스테이징 환경 자체가 없음).
 - **JWT**: HS256으로 서명하고 Access/Refresh를 서로 다른 시크릿(`JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET`)으로 분리한다 — 하나가 유출돼도 다른 토큰까지 위조되지 않게 하기 위함이며, 이미 PRD 4절이 시크릿을 2개로 나눠뒀으므로 그 결정을 그대로 따른다. payload에는 `userId`/`role`만 담고 이메일 등 개인정보는 넣지 않는다(토큰은 클라이언트에 그대로 저장되는 값이므로). 서명 검증은 `middleware/auth.js` 한 곳에서만 하고, 나머지 코드는 이 미들웨어를 통과한 `req.user`만 신뢰한다.

@@ -1,7 +1,8 @@
 # 실행 계획: 온리원이벤트
 
-- 버전: v1.2 (2026-08-13) — P1(FR-2.1~2.6) Task 반영: 5절에 마이페이지·폼 제출형·동의 보유 내용 작성·로그인 rate limit·이벤트 삭제/CSV 다운로드 Task(BE-8~12, FE-11~14, OPS-3) 추가. P0(1~4절)는 절대 변경하지 않음
-- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [3-prd.md](./3-prd.md)(PRD v1.4), [4-user-scenario.md](./4-user-scenario.md), [5-project-principle.md](./5-project-principle.md), [7-wireframe.md](./7-wireframe.md), [8-erd.md](./8-erd.md), [8-schema.sql](./8-schema.sql)
+- 버전: v1.3 (2026-08-13) — 실제 개발 착수 시 확정된 환경변수명 반영: `DATABASE_URL` → `DB_CONN_STRING`, `.env` 위치를 `backend/.env`로 명시(DB-1, BE-1)
+- 버전 이력: v1.2 (2026-08-13) — P1(FR-2.1~2.6) Task 반영: 5절에 마이페이지·폼 제출형·동의 보유 내용 작성·로그인 rate limit·이벤트 삭제/CSV 다운로드 Task(BE-8~12, FE-11~14, OPS-3) 추가. P0(1~4절)는 절대 변경하지 않음
+- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [3-prd.md](./3-prd.md)(PRD v1.5), [4-user-scenario.md](./4-user-scenario.md), [5-project-principle.md](./5-project-principle.md), [7-wireframe.md](./7-wireframe.md), [8-erd.md](./8-erd.md), [8-schema.sql](./8-schema.sql)
 - **이 문서의 역할**: 앞선 문서에서 확정된 요구사항·구조·스키마를 **실행 가능한 Task 단위로 분해**한다. 새로운 요구사항이나 설계 결정을 만들지 않으며, 충돌 시 도메인 정의서 → PRD → 프로젝트 원칙 순으로 우선한다.
 - **범위**: 1~4절은 PRD 3절의 **P0(FR-1.0~1.11)**, 5절은 **P1(FR-2.1~2.6)** 을 다룬다. P1은 P0가 전부 끝난 뒤(4일차 이후) 착수하는 것을 전제로 하며, 우선순위 자체를 재조정하지 않는다(PRD 3절 그대로).
 - **Task ID 체계**: `DB-n`(데이터베이스) / `BE-n`(백엔드) / `FE-n`(프론트엔드) / `OPS-n`(통합·배포). P1 Task는 P0 번호에 이어서 채번한다(BE-8부터, FE-11부터 등)
@@ -77,15 +78,15 @@ flowchart LR
 
 **작업 내용**
 - PostgreSQL 17 인스턴스 준비, 프로젝트용 데이터베이스 1개 생성
-- 루트에 `.env` 생성, 5개 변수 정의: `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`
+- `backend/.env` 생성, 5개 변수 정의: `DB_CONN_STRING`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`
 - `.env.example`(키 이름·예시값만) 작성 후 커밋 대상에 포함
 - `.gitignore`에 `.env`가 등록되어 있는지 확인
 
 **완료 조건**
-- [ ] PostgreSQL 17에 접속 가능하고, 프로젝트 전용 데이터베이스가 생성되어 있다
-- [ ] `.env`에 5개 변수가 모두 값과 함께 존재한다
-- [ ] `.env.example`이 존재하고 실제 시크릿 값이 들어있지 않다
-- [ ] `git status`에 `.env`가 나타나지 않는다(무시되고 있다)
+- [x] PostgreSQL 17에 접속 가능하고, 프로젝트 전용 데이터베이스가 생성되어 있다 (`postgres` 기본 DB를 로컬 개발용으로 그대로 사용하기로 결정, 접속 확인 완료)
+- [x] `.env`에 5개 변수가 모두 값과 함께 존재한다
+- [x] `.env.example`이 존재하고 실제 시크릿 값이 들어있지 않다
+- [x] `git status`에 `.env`가 나타나지 않는다(무시되고 있다)
 
 ---
 
@@ -98,12 +99,12 @@ flowchart LR
 - 해당 SQL을 대상 DB에 실행하여 테이블 5개(`users`/`events`/`prizes`/`entries`/`refresh_tokens`)와 제약·인덱스를 생성
 
 **완료 조건**
-- [ ] 5개 테이블이 모두 생성되어 있다(`\dt`로 확인)
-- [ ] `entries`에 부분 유니크 인덱스 2개(`uq_entries_event_user`, `uq_entries_event_guest_email`)가 존재하고, `INSERT ... ON CONFLICT (event_id, user_id) WHERE user_id IS NOT NULL DO NOTHING`이 예외 없이 동작한다(BE-5 전제조건)
-- [ ] `entries.user_agent`, `entries.consent_note` 컬럼이 존재한다(둘 다 nullable, 이번 P0 범위에서는 값을 채우지 않아도 무방)
-- [ ] 잘못된 Enum 값 삽입 시 CHECK 제약으로 거부된다 (예: `events.status = 'FOO'` INSERT 실패)
-- [ ] `prizes.weight = 0` INSERT가 CHECK 제약으로 거부된다
-- [ ] `docs/8-schema.sql`과 `backend/src/db/schema.sql`의 내용이 동일하다
+- [x] 5개 테이블이 모두 생성되어 있다(`\dt`로 확인)
+- [x] `entries`에 부분 유니크 인덱스 2개(`uq_entries_event_user`, `uq_entries_event_guest_email`)가 존재하고, `INSERT ... ON CONFLICT (event_id, user_id) WHERE user_id IS NOT NULL DO NOTHING`이 예외 없이 동작한다(BE-5 전제조건) — 동일 (event_id, guest_email)로 2회 INSERT해 두 번째가 예외 없이 0행 반환됨을 확인
+- [x] `entries.user_agent`, `entries.consent_note` 컬럼이 존재한다(둘 다 nullable, 이번 P0 범위에서는 값을 채우지 않아도 무방)
+- [x] 잘못된 Enum 값 삽입 시 CHECK 제약으로 거부된다 (예: `events.status = 'FOO'` INSERT 실패) — `events_status_check` 위반으로 거부 확인
+- [x] `prizes.weight = 0` INSERT가 CHECK 제약으로 거부된다 — `prizes_weight_check` 위반으로 거부 확인
+- [x] `docs/8-schema.sql`과 `backend/src/db/schema.sql`의 내용이 동일하다 (`diff` 결과 동일)
 
 ---
 
@@ -117,11 +118,11 @@ flowchart LR
 - `package.json`에 실행 스크립트 추가(예: `npm run seed`)
 
 **완료 조건**
-- [ ] `npm run seed` 실행 시 관리자 계정 1건이 생성된다
-- [ ] `users` 테이블에서 해당 계정의 `role`이 `ADMIN`이다
-- [ ] `password_hash` 컬럼에 평문이 아닌 bcrypt 해시가 저장되어 있다
-- [ ] 시드를 두 번 실행해도 계정이 중복 생성되지 않고 에러로 중단되지 않는다
-- [ ] 앱 내에 관리자 회원가입 경로를 만들지 않았다(도메인 1절 준수)
+- [x] `npm run seed` 실행 시 관리자 계정 1건이 생성된다
+- [x] `users` 테이블에서 해당 계정의 `role`이 `ADMIN`이다
+- [x] `password_hash` 컬럼에 평문이 아닌 bcrypt 해시가 저장되어 있다 (`$2b$10$...`, 60자)
+- [x] 시드를 두 번 실행해도 계정이 중복 생성되지 않고 에러로 중단되지 않는다 (`ON CONFLICT (email) DO NOTHING`, 재실행 시 exit code 0으로 스킵 메시지만 출력)
+- [x] 앱 내에 관리자 회원가입 경로를 만들지 않았다(도메인 1절 준수) — 이번 작업 범위에 회원가입 라우트/핸들러를 만들지 않음
 
 ---
 

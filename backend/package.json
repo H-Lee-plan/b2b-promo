@@ -1,0 +1,13 @@
+{
+  "name": "onlyoneevent-backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "seed": "node src/db/seed.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "pg": "^8.12.0"
+  }
+}

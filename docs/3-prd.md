@@ -1,6 +1,7 @@
 # PRD: 온리원이벤트
 
-- 버전: v1.4 (2026-08-13) — business-analyst 재검토 반영: (1) 성공 지표의 모바일 참여 비중이 8-schema.sql/9-plan.md에 없는 `entries.user_agent` 컬럼을 전제로 하고 있어 측정 불가능했던 문제를 수정(스키마 반영 필요 사실을 명시). (2) 3절 "제외"의 "핵심 추첨 로직 단위 테스트 1개만 유지"가 7절 리스크 표(추첨+중복신청 2건) 및 9-plan.md BE-7("자체 체크 2건")과 불일치하던 것을 2건으로 일치시킴. (3) 관련 문서의 도메인 정의서 버전 표기를 실제 최신본(v1.6)으로 갱신. FR 번호·P0/P1 구분·일정은 변경 없음
+- 버전: v1.5 (2026-08-13) — 실제 개발 착수 시 환경변수명을 `DATABASE_URL`에서 `DB_CONN_STRING`으로 확정(팀 컨벤션), `.env` 위치를 `backend/.env`로 명시. 값 자체와 5개 변수 구성은 변경 없음
+- 버전 이력: v1.4 (2026-08-13) — business-analyst 재검토 반영: (1) 성공 지표의 모바일 참여 비중이 8-schema.sql/9-plan.md에 없는 `entries.user_agent` 컬럼을 전제로 하고 있어 측정 불가능했던 문제를 수정(스키마 반영 필요 사실을 명시). (2) 3절 "제외"의 "핵심 추첨 로직 단위 테스트 1개만 유지"가 7절 리스크 표(추첨+중복신청 2건) 및 9-plan.md BE-7("자체 체크 2건")과 불일치하던 것을 2건으로 일치시킴. (3) 관련 문서의 도메인 정의서 버전 표기를 실제 최신본(v1.6)으로 갱신. FR 번호·P0/P1 구분·일정은 변경 없음
 - 버전 이력: v1.3 (2026-08-13) — 일정 마일스톤 조정: 1일차에 DB 스키마+마이그레이션, 인증(회원가입/로그인), 이벤트 CRUD API, 관리자 화면까지 포함하도록 재편. 이에 따라 일반 참여자 회원가입/로그인/회원 참여를 P1에서 P0로 재승격(마이페이지·취소 등 부가 기능만 P1 유지)
 - 버전 이력: v1.2 — 검토 반영: 인증을 쿠키 없는 Access/Refresh 방식으로 확정, 관리자 계정 시딩을 FR-1.0으로 명문화, P0 범위를 "첫 이벤트는 비회원 전용/공통 이벤트로 오픈" 기준으로 재조정, 조기 종료 P0 승격
 - 관련 문서: [1-domain-definition.md](./1-domain-definition.md) (도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md) (유스케이스)
@@ -82,7 +83,7 @@
 - 중복 신청 방지는 앱 코드가 아니라 **DB UNIQUE 제약**으로 건다. 회원은 `(event_id, user_id)`, 비회원은 도메인 5절에 따라 이메일 1개로 정규화한 `(event_id, guest_email)`. 판정은 `INSERT ... ON CONFLICT DO NOTHING`으로 예외 없이 감지한다(5-project-principle.md 2절 — 예외 catch 방식은 PostgreSQL 트랜잭션을 abort시켜 같은 트랜잭션의 룰렛 추첨이 실패하므로 쓰지 않는다). 반환 행이 없을 때만 기존 레코드의 status를 읽어 "신청완료면 거부 / 취소 상태면 재신청 처리"로 분기한다(락 없이 DB 제약 + 조회만으로 충분).
 - 룰렛 추첨은 참여신청과 **같은 트랜잭션**에서 처리(도메인 6절). 큐/워커/락 서비스 도입하지 않음.
 - 이벤트 상태는 컬럼 저장 + 조회 시 시각 비교(lazy). **스케줄러/크론 없음**(도메인 6절이 이미 그렇게 정의함).
-- 시크릿 관리: `.env` 1개 + `.gitignore` 등록. 필요한 값은 `DATABASE_URL` / `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` / `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD` 5개뿐. 별도 시크릿 매니저는 도입하지 않는다.
+- 시크릿 관리: `backend/.env` 1개 + `.gitignore` 등록. 필요한 값은 `DB_CONN_STRING` / `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` / `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD` 5개뿐. 별도 시크릿 매니저는 도입하지 않는다.
 - API 에러 응답은 `{ "error": { "code": "STRING_CODE", "message": "사용자 노출용 문구" } }` 형식 하나로 통일한다. 프론트는 공통 토스트 1개로 표시. 최소 코드셋: `DUPLICATE_ENTRY`(중복 신청), `TARGET_TYPE_MISMATCH`(대상 유형 불일치), `EVENT_CLOSED`(종료된 이벤트), `CONSENT_REQUIRED`(미동의).
 - **만들지 않는 것**: WebSocket/실시간 룰렛 동기화, 알림(이메일/SMS/푸시), 캐시 레이어(Redis), 파일 업로드/CDN, 마이크로서비스 분리, Docker 오케스트레이션, 상태관리 미들웨어/정규화 스토어, 이벤트 상세 조회수 로깅.
 
