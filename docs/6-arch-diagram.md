@@ -55,3 +55,106 @@ flowchart LR
 ```
 
 프론트는 Pages → TanStack Query 훅 → API client 단방향 의존, Zustand는 인증 토큰만 보관하고 서버 데이터를 중복 저장하지 않는다. 백엔드는 Routes → Handlers → Queries 3계층 고정이며, 도메인 규칙(대상유형 검증, 동의, 중복 방지, 룰렛 추첨)은 전부 Handlers에 모여 있다.
+
+## 3. 프론트엔드 컴포넌트 구조
+
+화면 8개(P0)와 [P1] 화면 3개가 공용 `components/` 3개를 어떻게 나눠 쓰는지만 보여준다. Pages → TanStack Query 훅 → API client 흐름은 2번 다이어그램 그대로이므로 여기서는 화살표 하나로만 표시한다.
+
+```mermaid
+flowchart TD
+    subgraph pages["Pages"]
+        subgraph pEvents["pages/events"]
+            EventListPage
+            EventDetailPage
+            RouletteResultPage
+        end
+        subgraph pAuth["pages/auth"]
+            LoginPage
+            SignupPage
+        end
+        subgraph pAdmin["pages/admin"]
+            AdminLoginPage
+            AdminEventListPage
+            AdminEventFormPage
+            AdminEntryListPage
+            AdminConsentNotePage["AdminConsentNotePage [P1]"]
+        end
+        subgraph pMypage["pages/mypage [P1]"]
+            MyEntriesPage["MyEntriesPage [P1]"]
+            MyProfilePage["MyProfilePage [P1]"]
+        end
+    end
+
+    subgraph components["components (공용)"]
+        Toast["Toast<br/>(에러 코드 6종 공용)"]
+        ConsentCheckbox["ConsentCheckbox<br/>(회원/비회원 공용)"]
+        FormFieldsInput["FormFieldsInput [P1]"]
+    end
+
+    query["TanStack Query 훅 → API client<br/>(2번 다이어그램 참고)"]
+
+    EventDetailPage --> ConsentCheckbox
+    EventDetailPage -. "참여방식이 폼 제출형일 때만" .-> FormFieldsInput
+    pages -. "에러 발생 시" .-> Toast
+    pages --> query
+```
+
+`Toast`는 이름대로 모든 Page에서 공용으로 쓰이므로 개별 화살표 대신 Pages 전체에서 한 번만 연결했고, `ConsentCheckbox`/`FormFieldsInput[P1]`은 실제로 쓰는 화면(`EventDetailPage`)이 하나뿐이라 그 화면에만 직접 연결했다.
+
+## 4. 백엔드 컴포넌트 구조
+
+Routes 4개(P0 3개 + [P1] 1개) → Handlers 4개 → `db/queries/` 5개 파일 단위 구성 관계를 보여준다. Handlers → PostgreSQL 흐름은 2번 다이어그램 그대로이므로 여기서는 화살표 하나로만 표시하고, 미들웨어는 3번 다이어그램의 `Toast`처럼 모든 routes가 공통으로 거치는 계층이라는 것만 한 번 표시한다.
+
+```mermaid
+flowchart TD
+    subgraph routes["routes/"]
+        authRoutes
+        eventsRoutes
+        entriesRoutes
+        mypageRoutes["mypageRoutes [P1]"]
+    end
+
+    subgraph handlersG["handlers/"]
+        authHandlers
+        eventsHandlers
+        entriesHandlers
+        mypageHandlers["mypageHandlers [P1]"]
+    end
+
+    subgraph queriesG["db/queries/"]
+        usersQueries
+        eventsQueries
+        prizesQueries
+        entriesQueries
+        refreshTokensQueries
+    end
+
+    subgraph middlewareG["middleware (공통 계층)"]
+        auth["auth.js<br/>(JWT 검증)"]
+        errorHandler["errorHandler.js"]
+        requestLogger["requestLogger.js"]
+        rateLimiter["rateLimiter.js [P1]"]
+    end
+
+    pg[("PostgreSQL 17<br/>(2번 다이어그램 참고)")]
+
+    authRoutes --> authHandlers
+    eventsRoutes --> eventsHandlers
+    entriesRoutes --> entriesHandlers
+    mypageRoutes --> mypageHandlers
+
+    authHandlers --> usersQueries
+    authHandlers --> refreshTokensQueries
+    eventsHandlers --> eventsQueries
+    eventsHandlers --> prizesQueries
+    entriesHandlers --> eventsQueries
+    entriesHandlers --> entriesQueries
+    entriesHandlers --> prizesQueries
+    mypageHandlers --> usersQueries
+    mypageHandlers --> entriesQueries
+
+    routes -. "모든 요청이 거침" .-> middlewareG
+    queriesG --> pg
+```
+
+`entriesHandlers`는 참여신청 처리 중 이벤트 상태·대상유형 검증에 `eventsQueries`, 중복/신청 기록에 `entriesQueries`, 룰렛 가중치 추첨에 `prizesQueries`까지 3개를 함께 쓰는 가장 무거운 핸들러다(5절 원칙 그대로). 미들웨어는 개별 handlers로의 화살표를 그리지 않고 routes 전체에 한 번만 연결했다 — 인증이 필요 없는 라우트도 `errorHandler`/`requestLogger`는 공통으로 거치기 때문이다.
