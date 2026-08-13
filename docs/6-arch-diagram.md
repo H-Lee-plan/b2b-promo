@@ -1,6 +1,7 @@
 # 기술 아키텍처 다이어그램: 온리원이벤트
 
-- 버전: v1.0 (2026-08-13)
+- 버전: v1.1 (2026-08-13) — backend-developer 서브에이전트 재검토: 4번 다이어그램 설명 중 잘못된 section 참조 수정(5절→7절)
+- 버전 이력: v1.0 — 최초 작성
 - 관련 문서: [3-prd.md](./3-prd.md)(PRD v1.3 4절 기술 스택/아키텍처 개요, 6절 일정), [5-project-principle.md](./5-project-principle.md)(프로젝트 구조 설계 원칙)
 - **이 문서의 역할**: 기술 스택을 새로 정하거나 재논의하지 않는다. PRD 4절·5절 문서에서 이미 확정된 스택(단일 VM + Caddy + Express + PostgreSQL, React 19 SPA, 레이어 3개 고정)을 그대로 전제하고, "이미 정해진 것들이 어떻게 배치·연결되는지"만 Mermaid로 시각화한다. 1인 개발/3일 일정, 오버엔지니어링 금지 원칙에 따라 실제로 쓰지 않는 컴포넌트(큐, 캐시, 마이크로서비스 등)는 그리지 않는다.
 
@@ -157,4 +158,4 @@ flowchart TD
     queriesG --> pg
 ```
 
-`entriesHandlers`는 참여신청 처리 중 이벤트 상태·대상유형 검증에 `eventsQueries`, 중복/신청 기록에 `entriesQueries`, 룰렛 가중치 추첨에 `prizesQueries`까지 3개를 함께 쓰는 가장 무거운 핸들러다(5절 원칙 그대로). 미들웨어는 개별 handlers로의 화살표를 그리지 않고 routes 전체에 한 번만 연결했다 — 인증이 필요 없는 라우트도 `errorHandler`/`requestLogger`는 공통으로 거치기 때문이다.
+`entriesHandlers`는 참여신청 처리 중 이벤트 상태·대상유형 검증에 `eventsQueries`, 중복/신청 기록에 `entriesQueries`, 룰렛 가중치 추첨에 `prizesQueries`까지 3개를 함께 쓰는 가장 무거운 핸들러다(7절 원칙 그대로). 미들웨어는 개별 handlers로의 화살표를 그리지 않고 routes 전체에 한 번만 연결했다 — 인증이 필요 없는 라우트도 `errorHandler`/`requestLogger`는 공통으로 거치기 때문이다.

@@ -1,5 +1,5 @@
 -- 온리원이벤트 스키마
--- 관련 문서: 8-erd.md, 1-domain-definition.md(v1.6) 4~7절, 5-project-principle.md 3·7절
+-- 관련 문서: 8-erd.md, 1-domain-definition.md(v1.7) 4~7절, 3-prd.md(v1.4) 8절, 5-project-principle.md 2·3·7절
 -- 마이그레이션 툴 없이 이 파일 1개로 관리한다(5-project-principle.md 7절). 시드 데이터는 seed.js 몫.
 -- 이 파일이 최종 산출물이며, 실제 구현 시 내용 그대로 backend/src/db/schema.sql로 복사해 사용한다(두 경로는 같은 내용, 다른 위치일 뿐 별개 스키마가 아니다).
 
@@ -51,12 +51,15 @@ CREATE TABLE entries (
     consented_at timestamptz NOT NULL,
     status       text NOT NULL DEFAULT 'APPLIED' CHECK (status IN ('APPLIED', 'CANCELED', 'WON', 'LOST')),
     prize_id     uuid REFERENCES prizes(id) ON DELETE SET NULL,           -- 룰렛 게임형에서 확정된 경품 참조, 그 외 null
-    applied_at   timestamptz NOT NULL DEFAULT now()
+    applied_at   timestamptz NOT NULL DEFAULT now(),
+    user_agent   text,                                                    -- 참여 요청의 User-Agent 그대로 저장(PRD 8절 모바일 참여 비중 집계용, 선택)
+    consent_note text                                                     -- 관리자가 사후 작성하는 동의 보유 내용(FR-2.4, P1). 참여 성립과 무관, 선택
 );
 
 -- (이벤트, 회원) 조합 유일 (도메인 정의서 5절, user_id가 null인 비회원 행은 제외)
+-- 참여신청 INSERT는 이 인덱스를 ON CONFLICT 대상으로 지정해 예외 없이 충돌을 감지한다(5-project-principle.md 2절: 트랜잭션을 abort시키지 않기 위함)
 CREATE UNIQUE INDEX uq_entries_event_user ON entries (event_id, user_id) WHERE user_id IS NOT NULL;
--- (이벤트, 비회원 이메일) 조합 유일 (guest_email이 null인 회원 행은 제외)
+-- (이벤트, 비회원 이메일) 조합 유일 (guest_email이 null인 회원 행은 제외). guest_email은 애플리케이션 레이어에서 trim+소문자 정규화 후 저장한다(도메인 정의서 7절)
 CREATE UNIQUE INDEX uq_entries_event_guest_email ON entries (event_id, guest_email) WHERE guest_email IS NOT NULL;
 -- 이벤트별 참여신청 목록 조회(관리자 신청자 목록)용 인덱스
 CREATE INDEX idx_entries_event_id ON entries (event_id);

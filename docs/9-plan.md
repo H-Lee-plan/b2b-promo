@@ -1,7 +1,7 @@
 # 실행 계획: 온리원이벤트
 
-- 버전: v1.0 (2026-08-13)
-- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.6), [3-prd.md](./3-prd.md)(PRD v1.3), [4-user-scenario.md](./4-user-scenario.md), [5-project-principle.md](./5-project-principle.md), [7-wireframe.md](./7-wireframe.md), [8-erd.md](./8-erd.md), [8-schema.sql](./8-schema.sql)
+- 버전: v1.1 (2026-08-13) — 6개 문서(도메인정의서~와이어프레임) 전문 서브에이전트 재검토 반영: 중복 신청 판정을 ON CONFLICT 방식으로 교체, 이메일 정규화·consentNote/user_agent 컬럼 추가에 따른 완료조건 갱신, 참조 버전 최신화
+- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [3-prd.md](./3-prd.md)(PRD v1.4), [4-user-scenario.md](./4-user-scenario.md), [5-project-principle.md](./5-project-principle.md), [7-wireframe.md](./7-wireframe.md), [8-erd.md](./8-erd.md), [8-schema.sql](./8-schema.sql)
 - **이 문서의 역할**: 앞선 문서에서 확정된 요구사항·구조·스키마를 **실행 가능한 Task 단위로 분해**한다. 새로운 요구사항이나 설계 결정을 만들지 않으며, 충돌 시 도메인 정의서 → PRD → 프로젝트 원칙 순으로 우선한다.
 - **범위**: PRD 3절의 **P0(FR-1.0~1.11)만** 대상으로 한다. P1(FR-2.x)은 이 계획에 포함하지 않는다.
 - **Task ID 체계**: `DB-n`(데이터베이스) / `BE-n`(백엔드) / `FE-n`(프론트엔드) / `OPS-n`(통합·배포)
@@ -83,7 +83,8 @@ flowchart LR
 
 **완료 조건**
 - [ ] 5개 테이블이 모두 생성되어 있다(`\dt`로 확인)
-- [ ] `entries`에 부분 유니크 인덱스 2개(`uq_entries_event_user`, `uq_entries_event_guest_email`)가 존재한다
+- [ ] `entries`에 부분 유니크 인덱스 2개(`uq_entries_event_user`, `uq_entries_event_guest_email`)가 존재하고, `INSERT ... ON CONFLICT (event_id, user_id) WHERE user_id IS NOT NULL DO NOTHING`이 예외 없이 동작한다(BE-5 전제조건)
+- [ ] `entries.user_agent`, `entries.consent_note` 컬럼이 존재한다(둘 다 nullable, 이번 P0 범위에서는 값을 채우지 않아도 무방)
 - [ ] 잘못된 Enum 값 삽입 시 CHECK 제약으로 거부된다 (예: `events.status = 'FOO'` INSERT 실패)
 - [ ] `prizes.weight = 0` INSERT가 CHECK 제약으로 거부된다
 - [ ] `docs/8-schema.sql`과 `backend/src/db/schema.sql`의 내용이 동일하다
@@ -156,6 +157,7 @@ flowchart LR
 - `db/queries/usersQueries.js`, `db/queries/refreshTokensQueries.js`
 - `handlers/authHandlers.js`: 회원가입(FR-1.1), 로그인/로그아웃(FR-1.2), Access/Refresh 재발급
   - 회원가입: 이메일 형식·중복 검사, 비밀번호 원문 8자 이상 검증 후 bcrypt(rounds 10) 해시 저장, `role='MEMBER'` 고정
+  - 회원가입/로그인의 이메일 비교는 항상 trim 후 소문자로 정규화한 값으로 수행(도메인 정의서 7절 — 대소문자·공백 차이로 중복 검사가 깨지지 않도록)
   - 로그인: Access(1시간)+Refresh(14일) 발급, Refresh는 해시로 `refresh_tokens`에 저장, **두 토큰 모두 응답 바디로 반환**(쿠키 미사용)
   - 재발급: Refresh 검증 후 회전(기존 토큰 삭제 + 신규 발급)
   - 로그아웃: 해당 Refresh 토큰 폐기
@@ -166,6 +168,7 @@ flowchart LR
 - [ ] curl로 회원가입 → 로그인 → Access/Refresh 토큰 2개를 응답 바디로 받는다
 - [ ] 비밀번호 7자로 가입 시 `VALIDATION_ERROR`(400)로 거부된다
 - [ ] 이미 가입된 이메일로 재가입 시 거부되고 메시지가 "이미 가입된 이메일" 취지다(S-6)
+- [ ] 대소문자·앞뒤 공백만 다른 이메일(`A@corp.com` vs ` a@corp.com `)로 재가입 시에도 중복으로 거부된다(도메인 7절 정규화 규칙)
 - [ ] 잘못된 비밀번호 로그인 시 이메일/비밀번호 중 무엇이 틀렸는지 구분해 알려주지 않는다(S-6)
 - [ ] Refresh로 재발급 시 새 Access가 발급되고, **같은 Refresh를 다시 쓰면 실패**한다(회전 확인)
 - [ ] 로그아웃 후 해당 Refresh로 재발급이 실패한다
@@ -214,8 +217,8 @@ flowchart LR
   1. 이벤트 상태 검증(진행중 아니면 `EVENT_CLOSED`)
   2. 참여 대상 유형 검증 3종 전부(불일치 시 `TARGET_TYPE_MISMATCH`)
   3. 개인정보 동의 검증(미동의 시 `CONSENT_REQUIRED`), `consentedAt` 기록
-  4. 회원/비회원 분기: 회원은 `userId`, 비회원은 `guestEmail`(식별 기준)·`guestPhone`·`guestInfo` 저장
-  5. 중복 처리: DB UNIQUE 위반(23505) 포착 후 기존 레코드 상태 조회 → `APPLIED/WON/LOST`면 `DUPLICATE_ENTRY` 거부 / `CANCELED`면 `APPLIED`로 상태 전환(재신청)
+  4. 회원/비회원 분기: 회원은 `userId`, 비회원은 `guestEmail`(trim+소문자 정규화 후 식별 기준으로 사용, 도메인 7절)·`guestPhone`·`guestInfo` 저장. 요청 헤더의 User-Agent를 `user_agent`에 함께 저장(PRD 8절 모바일 비중 측정용)
+  5. 중복 처리: `INSERT ... ON CONFLICT (event_id, user_id 또는 guest_email) DO NOTHING RETURNING id`로 충돌을 예외 없이 감지(5-project-principle.md 2절 — 예외 catch 방식은 트랜잭션을 abort시켜 이후 쿼리가 전부 실패하므로 쓰지 않는다) → 반환 행이 없으면 기존 레코드 상태 조회 → `APPLIED/WON/LOST`면 `DUPLICATE_ENTRY` 거부 / `CANCELED`면 같은 트랜잭션에서 `UPDATE ... SET status='APPLIED'`로 전환(재신청)
   6. 룰렛 게임형이면 경품 목록을 `weight` 비율로 추첨해 1건 확정, 같은 트랜잭션에서 `prizeId`와 `status`(`WON`/`LOST`) 저장. 재추첨 불가
 - 단순 참여형은 `status='APPLIED'`로만 저장(당첨/미당첨 상태 미사용)
 - 성공 시 응답에 확정 경품 정보 포함(룰렛형)
