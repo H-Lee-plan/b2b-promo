@@ -58,7 +58,7 @@ flowchart LR
 
 ## 3. 프론트엔드 컴포넌트 구조
 
-화면 8개(P0)와 [P1] 화면 3개가 공용 `components/` 3개를 어떻게 나눠 쓰는지만 보여준다. Pages → TanStack Query 훅 → API client 흐름은 2번 다이어그램 그대로이므로 여기서는 화살표 하나로만 표시한다.
+화면 9개(P0)와 [P1] 화면 3개가 공용 `components/` 3개를 어떻게 나눠 쓰는지만 보여준다. Pages → TanStack Query 훅 → API client 흐름은 2번 다이어그램 그대로이므로 여기서는 화살표 하나로만 표시한다.
 
 ```mermaid
 flowchart TD
