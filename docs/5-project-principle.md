@@ -1,10 +1,15 @@
 # 프로젝트 구조 설계 원칙: 온리원이벤트
 
-- 버전: v1.4 (2026-08-13) — 실제 구현 중 `PORT`(기본 3000), `FRONTEND_ORIGIN`(기본 `http://localhost:5173`) 선택 환경변수 추가. 5개 필수 변수와 구분해 명시, CORS 설정을 하드코딩에서 `FRONTEND_ORIGIN` 참조로 변경
-- 버전 이력: v1.3 (2026-08-13) — 환경변수명을 `DATABASE_URL`에서 `DB_CONN_STRING`으로 확정(PRD v1.5와 동일), `.env` 위치를 `backend/.env`로 명시
-- 버전 이력: v1.2 (2026-08-13) — swagger.json 신규 작성에 따른 교차 검토 반영: 1절의 "에러 코드 4개"를 PRD 4절/5절이 이미 확정한 실제 개수(비즈니스 4종 + VALIDATION_ERROR + INTERNAL_ERROR = 6개)와 일치하도록 수정
-- 버전 이력: v1.1 (2026-08-13) — 참여신청 중복 판정을 UNIQUE 위반 예외 catch 방식에서 `INSERT ... ON CONFLICT`로 교체(예외 catch는 PostgreSQL 트랜잭션을 abort시켜 같은 트랜잭션 내 룰렛 추첨이 실패하는 문제가 있었음), 쿼리 함수의 트랜잭션 재사용 패턴(pool/client 공용 인터페이스, release 누락 방지) 명시
-- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md), [3-prd.md](./3-prd.md)(PRD v1.5), [4-user-scenario.md](./4-user-scenario.md)
+## 변경이력
+| 버전 | 일시 | 변경 내용 |
+|---|---|---|
+| v1.1 | 2026-08-13 | 참여신청 중복 판정을 UNIQUE 위반 예외 catch 방식에서 `INSERT ... ON CONFLICT`로 교체(예외 catch는 PostgreSQL 트랜잭션을 abort시켜 같은 트랜잭션 내 룰렛 추첨이 실패하는 문제가 있었음), 쿼리 함수의 트랜잭션 재사용 패턴(pool/client 공용 인터페이스, release 누락 방지) 명시 |
+| v1.2 | 2026-08-13 | swagger.json 신규 작성에 따른 교차 검토 반영: 1절의 "에러 코드 4개"를 PRD 4절/5절이 이미 확정한 실제 개수(비즈니스 4종 + VALIDATION_ERROR + INTERNAL_ERROR = 6개)와 일치하도록 수정 |
+| v1.3 | 2026-08-13 | 환경변수명을 `DATABASE_URL`에서 `DB_CONN_STRING`으로 확정(PRD v1.5와 동일), `.env` 위치를 `backend/.env`로 명시 |
+| v1.4 | 2026-08-13 | 실제 구현 중 `PORT`(기본 3000), `FRONTEND_ORIGIN`(기본 `http://localhost:5173`) 선택 환경변수 추가. 5개 필수 변수와 구분해 명시, CORS 설정을 하드코딩에서 `FRONTEND_ORIGIN` 참조로 변경 |
+| v1.5 | 2026-08-14 | docs 정합성 재검토: PRD 참조 버전을 실제 최신본(v1.6)으로 갱신 |
+
+- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md), [3-prd.md](./3-prd.md)(PRD v1.6), [4-user-scenario.md](./4-user-scenario.md)
 - **이 문서의 역할**: PRD 4절에서 이미 확정된 기술 스택(React 19 + Zustand + TanStack Query / Node.js + Express + `pg` / PostgreSQL 17 / 쿠키 없는 Access·Refresh JWT)을 그대로 전제하고, "그 스택으로 코드를 어떻게 배치할지"만 다룬다. 스택 재논의·신규 도구 도입 제안은 이 문서의 범위가 아니다.
 
 ## 1. 모든 스택에 공통인 최상위 원칙

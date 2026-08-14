@@ -1,7 +1,12 @@
 # 사용자 시나리오: 온리원이벤트
 
-- 버전: v1.1 (2026-08-13)
-- 관련 문서: [1-domain-definition.md](./1-domain-definition.md) (도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md) (유스케이스), [3-prd.md](./3-prd.md) (PRD v1.4)
+## 변경이력
+| 버전 | 일시 | 변경 내용 |
+|---|---|---|
+| v1.1 | 2026-08-13 | 초안 작성 |
+| v1.2 | 2026-08-14 | docs 정합성 재검토: PRD 참조 버전을 실제 최신본(v1.6)으로 갱신 |
+
+- 관련 문서: [1-domain-definition.md](./1-domain-definition.md) (도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md) (유스케이스), [3-prd.md](./3-prd.md) (PRD v1.6)
 
 ## 이 문서의 역할
 

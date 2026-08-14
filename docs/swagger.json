@@ -3,7 +3,7 @@
   "info": {
     "title": "온리원이벤트 API",
     "version": "1.0.1",
-    "description": "식자재 유통 B2B 고객사 대상 이벤트 참여 웹앱 \"온리원이벤트\"의 REST API 명세.\n이 문서는 PRD v1.4 3절의 P0 범위(FR-1.0~FR-1.11)만 다룬다. 마이페이지, 참여신청 취소/재신청, 폼 제출형(FORM) 이벤트, 동의 보유 내용 작성, 로그인 rate limit, 이벤트 삭제/엑셀 다운로드 등 P1(FR-2.x) 기능은 포함하지 않는다.\n인증은 쿠키를 사용하지 않으며(PRD 4절), Access/Refresh Token을 모두 요청/응답 바디로 주고받는다."
+    "description": "식자재 유통 B2B 고객사 대상 이벤트 참여 웹앱 \"온리원이벤트\"의 REST API 명세.\n이 문서는 PRD v1.6 3절의 P0 범위(FR-1.0~FR-1.11)만 다룬다. 마이페이지, 참여신청 취소/재신청, 폼 제출형(FORM) 이벤트, 동의 보유 내용 작성, 로그인 rate limit, 이벤트 삭제/엑셀 다운로드 등 P1(FR-2.x) 기능은 포함하지 않는다.\n인증은 쿠키를 사용하지 않으며(PRD 4절), Access/Refresh Token을 모두 요청/응답 바디로 주고받는다."
   },
   "servers": [
     { "url": "/api", "description": "동일 오리진 API 베이스 경로" }
