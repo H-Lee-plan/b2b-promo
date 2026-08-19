@@ -43,14 +43,16 @@ async function insertGuestEntry(
 }
 
 async function reapplyById(id, { consentedAt, guestPhone, guestInfo }, client = pool) {
+  // WHERE status='CANCELED'로 조건부 갱신해, 동시에 들어온 두 재신청 요청 중 하나만
+  // 실제로 전환되도록 한다(둘 다 무조건 통과시키면 룰렛이 두 번 돌 수 있음).
   const result = await client.query(
     `UPDATE entries
      SET status = 'APPLIED', consented_at = $2, guest_phone = COALESCE($3, guest_phone), guest_info = COALESCE($4, guest_info)
-     WHERE id = $1
+     WHERE id = $1 AND status = 'CANCELED'
      RETURNING *`,
     [id, consentedAt, guestPhone ?? null, guestInfo ?? null]
   );
-  return mapRow(result.rows[0]);
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
 
 async function setRouletteResult(id, { prizeId, status }, client = pool) {

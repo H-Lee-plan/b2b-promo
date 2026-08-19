@@ -4,11 +4,10 @@ const jwt = require('jsonwebtoken');
 
 const usersQueries = require('../db/queries/usersQueries');
 const refreshTokensQueries = require('../db/queries/refreshTokensQueries');
-const { normalizeEmail } = require('../shared/normalizeEmail');
+const { normalizeEmail, isValidEmailFormat } = require('../shared/normalizeEmail');
 const { AppError } = require('../shared/errors');
 const { loadEnv } = require('../config/env');
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REFRESH_TOKEN_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
 function hashToken(token) {
@@ -44,7 +43,7 @@ async function signup(req, res, next) {
     const normalizedEmail = email ? normalizeEmail(email) : '';
     if (
       !normalizedEmail ||
-      !EMAIL_RE.test(normalizedEmail) ||
+      !isValidEmailFormat(normalizedEmail) ||
       !password ||
       password.length < 8 ||
       !companyName ||

@@ -6,10 +6,10 @@ const prizesQueries = require('../db/queries/prizesQueries');
 const entriesQueries = require('../db/queries/entriesQueries');
 const { computeEffectiveStatus } = require('./eventsHandlers');
 const { drawPrize } = require('../shared/drawPrize');
-const { normalizeEmail } = require('../shared/normalizeEmail');
+const { normalizeEmail, isValidEmailFormat } = require('../shared/normalizeEmail');
 const { AppError } = require('../shared/errors');
 const { loadEnv } = require('../config/env');
-const { EVENT_STATUS, TARGET_TYPE, ENTRY_STATUS } = require('../shared/enums');
+const { EVENT_STATUS, TARGET_TYPE, ENTRY_STATUS, PARTICIPATION_TYPE } = require('../shared/enums');
 
 const LOSING_PRIZE_NAME = '미당첨';
 
@@ -31,6 +31,7 @@ function validateGuestFields(body) {
   const { guestEmail, guestPhone, guestInfo } = body;
   if (
     !guestEmail ||
+    !isValidEmailFormat(guestEmail) ||
     !guestPhone ||
     !guestInfo ||
     typeof guestInfo !== 'object' ||
@@ -38,7 +39,10 @@ function validateGuestFields(body) {
     !guestInfo.name ||
     !guestInfo.phone
   ) {
-    throw new AppError('VALIDATION_ERROR', '비회원 참여 시 guestEmail/guestPhone/guestInfo가 모두 필요합니다.');
+    throw new AppError(
+      'VALIDATION_ERROR',
+      '비회원 참여 시 guestEmail(형식 포함)/guestPhone/guestInfo가 모두 필요합니다.'
+    );
   }
   return { guestEmail: normalizeEmail(guestEmail), guestPhone, guestInfo };
 }
@@ -119,13 +123,17 @@ async function createEntry(req, res, next) {
 
       if (existing.status === ENTRY_STATUS.CANCELED) {
         entry = await entriesQueries.reapplyById(existing.id, { consentedAt, guestPhone, guestInfo }, client);
+        if (!entry) {
+          // 동시에 들어온 다른 요청이 먼저 CANCELED→APPLIED 전환을 마친 경우
+          throw new AppError('DUPLICATE_ENTRY', '이미 참여하셨습니다.');
+        }
       } else {
         throw new AppError('DUPLICATE_ENTRY', '이미 참여하셨습니다.');
       }
     }
 
     let prize = null;
-    if (event.participationType === 'ROULETTE') {
+    if (event.participationType === PARTICIPATION_TYPE.ROULETTE) {
       const prizes = await prizesQueries.findByEventId(eventId, client);
       const drawn = drawPrize(prizes);
       const status = drawn.name === LOSING_PRIZE_NAME ? ENTRY_STATUS.LOST : ENTRY_STATUS.WON;

@@ -2,9 +2,9 @@ const pool = require('../db/pool');
 const eventsQueries = require('../db/queries/eventsQueries');
 const prizesQueries = require('../db/queries/prizesQueries');
 const { AppError } = require('../shared/errors');
-const { TARGET_TYPE, EVENT_STATUS } = require('../shared/enums');
+const { TARGET_TYPE, EVENT_STATUS, PARTICIPATION_TYPE } = require('../shared/enums');
 
-const CREATABLE_PARTICIPATION_TYPES = ['SIMPLE', 'ROULETTE'];
+const CREATABLE_PARTICIPATION_TYPES = [PARTICIPATION_TYPE.SIMPLE, PARTICIPATION_TYPE.ROULETTE];
 
 function computeEffectiveStatus(event, now) {
   if (event.status === EVENT_STATUS.CLOSED) return EVENT_STATUS.CLOSED;
@@ -68,7 +68,7 @@ function validateEventCreate(body) {
     throw new AppError('VALIDATION_ERROR', 'isPinned은 boolean이어야 합니다.');
   }
 
-  const validPrizes = participationType === 'ROULETTE' ? validatePrizeList(prizes) : [];
+  const validPrizes = participationType === PARTICIPATION_TYPE.ROULETTE ? validatePrizeList(prizes) : [];
 
   return {
     title,
@@ -88,7 +88,7 @@ async function listEvents(req, res, next) {
     const now = new Date();
     const results = await Promise.all(
       events.map(async (event) => {
-        const prizes = event.participationType === 'ROULETTE' ? await prizesQueries.findByEventId(event.id) : [];
+        const prizes = event.participationType === PARTICIPATION_TYPE.ROULETTE ? await prizesQueries.findByEventId(event.id) : [];
         return toEventResponse(event, prizes, now);
       })
     );
@@ -104,7 +104,7 @@ async function getEvent(req, res, next) {
     if (!event) {
       throw new AppError('VALIDATION_ERROR', '존재하지 않는 이벤트입니다.', 404);
     }
-    const prizes = event.participationType === 'ROULETTE' ? await prizesQueries.findByEventId(event.id) : [];
+    const prizes = event.participationType === PARTICIPATION_TYPE.ROULETTE ? await prizesQueries.findByEventId(event.id) : [];
     res.status(200).json(toEventResponse(event, prizes, new Date()));
   } catch (err) {
     next(err);
@@ -118,12 +118,12 @@ async function createEvent(req, res, next) {
 
     await client.query('BEGIN');
     const event = await eventsQueries.insert(validated, client);
-    if (validated.participationType === 'ROULETTE') {
+    if (validated.participationType === PARTICIPATION_TYPE.ROULETTE) {
       await prizesQueries.replaceForEvent(event.id, validated.prizes, client);
     }
     await client.query('COMMIT');
 
-    const prizes = validated.participationType === 'ROULETTE' ? await prizesQueries.findByEventId(event.id) : [];
+    const prizes = validated.participationType === PARTICIPATION_TYPE.ROULETTE ? await prizesQueries.findByEventId(event.id) : [];
     res.status(201).json(toEventResponse(event, prizes, new Date()));
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
@@ -155,6 +155,12 @@ async function updateEvent(req, res, next) {
           'VALIDATION_ERROR',
           '진행중 이벤트는 참여대상유형/참여방식/시작일시를 변경할 수 없습니다.'
         );
+      }
+      if ('prizes' in body) {
+        // 진행중 이벤트는 이미 참여신청이 확정 경품(prizeId)을 참조하고 있을 수 있다.
+        // 경품을 교체하면 DELETE+INSERT로 인해 기존 참조가 ON DELETE SET NULL로 끊어지므로
+        // (도메인 6절 "확정된 결과는 재추첨 불가·영구 보존") 진행중에는 경품 수정 자체를 막는다.
+        throw new AppError('VALIDATION_ERROR', '진행중 이벤트는 경품 목록을 변경할 수 없습니다.');
       }
     }
 
@@ -194,7 +200,7 @@ async function updateEvent(req, res, next) {
     // prizesToPersist === null이면 기존 경품 행을 건드리지 않는다(FK로 참조 중인 prizeId가
     // 불필요하게 끊어지지 않도록, 요청에 prizes가 실제로 포함된 경우에만 교체한다).
     let prizesToPersist = null;
-    if (merged.participationType === 'ROULETTE') {
+    if (merged.participationType === PARTICIPATION_TYPE.ROULETTE) {
       if (body.prizes !== undefined) {
         prizesToPersist = validatePrizeList(body.prizes);
       } else {
@@ -215,7 +221,7 @@ async function updateEvent(req, res, next) {
     }
     await client.query('COMMIT');
 
-    const prizes = merged.participationType === 'ROULETTE' ? await prizesQueries.findByEventId(eventId) : [];
+    const prizes = merged.participationType === PARTICIPATION_TYPE.ROULETTE ? await prizesQueries.findByEventId(eventId) : [];
     res.status(200).json(toEventResponse(updated, prizes, now));
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
@@ -240,7 +246,7 @@ async function closeEvent(req, res, next) {
     }
 
     const closed = await eventsQueries.close(eventId);
-    const prizes = closed.participationType === 'ROULETTE' ? await prizesQueries.findByEventId(eventId) : [];
+    const prizes = closed.participationType === PARTICIPATION_TYPE.ROULETTE ? await prizesQueries.findByEventId(eventId) : [];
     res.status(200).json(toEventResponse(closed, prizes, now));
   } catch (err) {
     next(err);

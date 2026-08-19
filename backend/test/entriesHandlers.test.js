@@ -267,6 +267,64 @@ test('CANCELED 상태 레코드가 있는 참여자의 재신청은 새 레코�
   assert.strictEqual(Number(count.rows[0].count), 1);
 });
 
+test('CANCELED 레코드에 동시 재신청 2건이 와도 룰렛이 한 번만 돌고 1건만 성공한다', async (t) => {
+  const server = await startServer();
+  const port = server.address().port;
+  const event = await createEvent(port, { participationType: 'ROULETTE', prizes: ROULETTE_PRIZES });
+  t.after(async () => {
+    server.close();
+    await cleanupEvent(event.id);
+  });
+
+  const body = guestBody();
+  const firstRes = await fetch(`http://localhost:${port}/api/events/${event.id}/entries`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const first = await firstRes.json();
+  await pool.query("UPDATE entries SET status = 'CANCELED', prize_id = NULL WHERE id = $1", [first.id]);
+
+  const [res1, res2] = await Promise.all([
+    fetch(`http://localhost:${port}/api/events/${event.id}/entries`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+    fetch(`http://localhost:${port}/api/events/${event.id}/entries`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  ]);
+  const statuses = [res1.status, res2.status].sort();
+  assert.deepStrictEqual(statuses, [201, 409]);
+
+  const rows = await pool.query('SELECT status, prize_id FROM entries WHERE id = $1', [first.id]);
+  assert.strictEqual(rows.rowCount, 1);
+  assert.ok(['WON', 'LOST'].includes(rows.rows[0].status));
+  assert.ok(rows.rows[0].prize_id);
+});
+
+test('비회원 참여 시 guestEmail 형식이 올바르지 않으면 VALIDATION_ERROR로 거부된다', async (t) => {
+  const server = await startServer();
+  const port = server.address().port;
+  const event = await createEvent(port, { participationType: 'SIMPLE' });
+  t.after(async () => {
+    server.close();
+    await cleanupEvent(event.id);
+  });
+
+  const res = await fetch(`http://localhost:${port}/api/events/${event.id}/entries`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(guestBody({ guestEmail: 'not-an-email' })),
+  });
+  assert.strictEqual(res.status, 400);
+  const body = await res.json();
+  assert.strictEqual(body.error.code, 'VALIDATION_ERROR');
+});
+
 test('종료된 이벤트 참여 요청이 EVENT_CLOSED로 거부된다(S-9)', async (t) => {
   const server = await startServer();
   const port = server.address().port;

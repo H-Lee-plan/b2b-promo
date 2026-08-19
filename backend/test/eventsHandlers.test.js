@@ -202,6 +202,44 @@ test('진행중 이벤트의 targetType/participationType/startAt 수정 요청�
   assert.strictEqual(body.error.code, 'VALIDATION_ERROR');
 });
 
+test('진행중인 룰렛 이벤트의 경품 목록 수정 요청은 거부된다(확정된 참여신청의 prizeId 보호)', async (t) => {
+  const server = await startServer();
+  const port = server.address().port;
+  let eventId;
+  t.after(async () => {
+    server.close();
+    await deleteEvent(eventId);
+  });
+
+  const createRes = await fetch(`http://localhost:${port}/api/events`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${adminToken()}` },
+    body: JSON.stringify(
+      baseEventBody({
+        participationType: 'ROULETTE',
+        prizes: [{ name: '1등', weight: 1 }],
+        startAt: new Date(Date.now() - HOUR_MS).toISOString(),
+        endAt: new Date(Date.now() + HOUR_MS).toISOString(),
+      })
+    ),
+  });
+  const created = await createRes.json();
+  eventId = created.id;
+  assert.strictEqual(created.status, 'ONGOING');
+
+  const res = await fetch(`http://localhost:${port}/api/events/${eventId}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${adminToken()}` },
+    body: JSON.stringify({ prizes: [{ name: '1등', weight: 2 }] }),
+  });
+  assert.strictEqual(res.status, 400);
+  const body = await res.json();
+  assert.strictEqual(body.error.code, 'VALIDATION_ERROR');
+
+  const prizesAfter = await pool.query('SELECT id, weight FROM prizes WHERE event_id = $1', [eventId]);
+  assert.strictEqual(prizesAfter.rows[0].weight, 1);
+});
+
 test('진행중 이벤트의 endAt을 앞당기는 요청은 거부되고, 연장은 허용된다', async (t) => {
   const server = await startServer();
   const port = server.address().port;
