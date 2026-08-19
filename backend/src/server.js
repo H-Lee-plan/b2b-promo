@@ -5,6 +5,7 @@ const cors = require('cors');
 const requestLogger = require('./middleware/requestLogger');
 const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/authRoutes');
+const eventsRoutes = require('./routes/eventsRoutes');
 
 const app = express();
 app.use(express.json());
@@ -20,6 +21,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/events', eventsRoutes);
 
 app.use(errorHandler);
 
