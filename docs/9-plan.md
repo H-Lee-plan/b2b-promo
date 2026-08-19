@@ -164,11 +164,11 @@ flowchart LR
 - `src/db/rowMapper.js`: snake_case row → camelCase 객체 범용 변환
 
 **완료 조건**
-- [ ] 임의 라우트에서 `throw new AppError('EVENT_CLOSED', ...)` 시 지정 포맷 JSON이 응답된다
-- [ ] 처리되지 않은 예외 발생 시 응답 바디에 스택이 노출되지 않고 `INTERNAL_ERROR`로 통일된다
-- [ ] 요청 1건당 로그가 1줄 출력되고, 그 로그에 비밀번호·토큰·개인정보가 없다
-- [ ] `rowMapper`가 `{ user_id, created_at }` → `{ userId, createdAt }`으로 변환한다
-- [ ] Enum 상수 값이 프로젝트 원칙 3절 매핑표와 스펠링까지 일치한다
+- [x] 임의 라우트에서 `throw new AppError('EVENT_CLOSED', ...)` 시 지정 포맷 JSON이 응답된다 (`test/errorHandler.test.js` — 409 + `{"error":{"code":"EVENT_CLOSED","message":"..."}}` 확인)
+- [x] 처리되지 않은 예외 발생 시 응답 바디에 스택이 노출되지 않고 `INTERNAL_ERROR`로 통일된다 (`test/errorHandler.test.js` — 500 + `INTERNAL_ERROR`, 바디에 원본 에러 메시지·스택 없음 확인, 스택은 `console.error`로 서버 로그에만 출력)
+- [x] 요청 1건당 로그가 1줄 출력되고, 그 로그에 비밀번호·토큰·개인정보가 없다 (`test/requestLogger.test.js` — `POST /login 200 Nms` 형식 1줄, 요청 바디의 비밀번호 값 미포함 확인)
+- [x] `rowMapper`가 `{ user_id, created_at }` → `{ userId, createdAt }`으로 변환한다 (`test/rowMapper.test.js` 통과)
+- [x] Enum 상수 값이 프로젝트 원칙 3절 매핑표와 스펠링까지 일치한다 (`test/enums.test.js` — `MEMBER_ONLY`/`GUEST_ONLY`/`COMMON`, `SIMPLE`/`FORM`/`ROULETTE`, `SCHEDULED`/`ONGOING`/`CLOSED`, `APPLIED`/`CANCELED`/`WON`/`LOST`, `ADMIN`/`MEMBER` 전부 일치)
 
 ---
 
