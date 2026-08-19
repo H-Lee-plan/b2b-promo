@@ -8,10 +8,10 @@ const ERROR_STATUS = {
 };
 
 class AppError extends Error {
-  constructor(code, message) {
+  constructor(code, message, status) {
     super(message || code);
     this.code = code;
-    this.status = ERROR_STATUS[code] || 500;
+    this.status = status || ERROR_STATUS[code] || 500;
   }
 }
 

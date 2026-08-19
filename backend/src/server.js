@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const requestLogger = require('./middleware/requestLogger');
 const errorHandler = require('./middleware/errorHandler');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 app.use(express.json());
@@ -17,6 +18,8 @@ if (process.env.NODE_ENV !== 'production') {
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+app.use('/api/auth', authRoutes);
 
 app.use(errorHandler);
 
