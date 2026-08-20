@@ -7,17 +7,17 @@ const assert = require('node:assert');
 
 test('pool 모듈이 예외 없이 로드된다', () => {
   assert.doesNotThrow(() => {
-    require('../src/db/pool');
+    require('../src/infrastructure/db/pool');
   });
 });
 
 test('pool은 query 함수를 가진다', () => {
-  const pool = require('../src/db/pool');
+  const pool = require('../src/infrastructure/db/pool');
   assert.strictEqual(typeof pool.query, 'function');
 });
 
 test('pool의 error 핸들러는 예외를 던지지 않는다', () => {
-  const pool = require('../src/db/pool');
+  const pool = require('../src/infrastructure/db/pool');
   assert.doesNotThrow(() => {
     pool.emit('error', new Error('테스트용 idle client 에러'));
   });

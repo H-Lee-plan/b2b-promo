@@ -1,11 +1,19 @@
-require('./config/env').loadEnv();
+require('./infrastructure/config/env').loadEnv();
 
 const express = require('express');
 const cors = require('cors');
-const requestLogger = require('./middleware/requestLogger');
-const errorHandler = require('./middleware/errorHandler');
-const authRoutes = require('./routes/authRoutes');
-const eventsRoutes = require('./routes/eventsRoutes');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('../../docs/swagger.json');
+
+const requestLogger = require('./interfaces/http/middleware/requestLogger');
+const errorHandler = require('./interfaces/http/middleware/errorHandler');
+const { buildContainer } = require('./composition/container');
+const { createAuthRoutes } = require('./interfaces/http/routes/authRoutes');
+const { createEventsRoutes } = require('./interfaces/http/routes/eventsRoutes');
+const { createEntriesRoutes } = require('./interfaces/http/routes/entriesRoutes');
+const { createMypageRoutes } = require('./interfaces/http/routes/mypageRoutes');
+
+const container = buildContainer();
 
 const app = express();
 app.use(express.json());
@@ -20,8 +28,20 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/events', eventsRoutes);
+if (process.env.NODE_ENV !== 'production') {
+  const devPort = process.env.PORT || 3000;
+  const devSwaggerDocument = {
+    ...swaggerDocument,
+    servers: [{ url: `http://localhost:${devPort}/api`, description: '로컬 개발 서버' }],
+  };
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(devSwaggerDocument));
+}
+
+const entriesRouter = createEntriesRoutes(container.entriesController, container.authMiddleware);
+
+app.use('/api/auth', createAuthRoutes(container.authController));
+app.use('/api/events', createEventsRoutes(container.eventsController, entriesRouter, container.authMiddleware));
+app.use('/api/mypage', createMypageRoutes(container.mypageController, container.authMiddleware));
 
 app.use(errorHandler);
 

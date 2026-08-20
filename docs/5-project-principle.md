@@ -8,16 +8,19 @@
 | v1.3 | 2026-08-13 | 환경변수명을 `DATABASE_URL`에서 `DB_CONN_STRING`으로 확정(PRD v1.5와 동일), `.env` 위치를 `backend/.env`로 명시 |
 | v1.4 | 2026-08-13 | 실제 구현 중 `PORT`(기본 3000), `FRONTEND_ORIGIN`(기본 `http://localhost:5173`) 선택 환경변수 추가. 5개 필수 변수와 구분해 명시, CORS 설정을 하드코딩에서 `FRONTEND_ORIGIN` 참조로 변경 |
 | v1.5 | 2026-08-14 | docs 정합성 재검토: PRD 참조 버전을 실제 최신본(v1.6)으로 갱신 |
+| v1.6 | 2026-08-14 | **백엔드 한정 예외 명시**: `backend/CLAUDE.md`가 SOLID·Clean Architecture를 명시적으로 요구함에 따라, 백엔드는 실제로 이 문서 1절의 "레이어 3개 고정" 원칙을 적용하지 않고 domain/application/infrastructure/interfaces 4계층 구조로 구현되어 있다(사용자의 명시적 선택). 이 문서 1·2·6절의 백엔드 레이어·디렉토리 서술은 최초 설계 의도를 보여주는 기록으로 남기되, **실제 백엔드 구조의 최종 근거는 `backend/CLAUDE.md`와 실제 코드**이며 이 문서와 충돌할 경우 그쪽을 따른다. 프론트엔드(FE) 관련 원칙은 이 변경의 영향을 받지 않는다 |
+| v1.7 | 2026-08-20 | 사용자 요청으로 P0/P1 우선순위 구분 제거(PRD v1.7과 정합) — 1절의 "참여 방식 2종(P0)"/"P1 폼 제출형 추가" 표현 정리, 6·7절 디렉토리 트리의 `# P0`/`[P1]` 태그 전부 제거(우선순위가 아니라 9-plan.md 체크박스로 구현 여부를 추적). 6·7절은 v1.6에 따라 여전히 최초 설계 의도의 기록이며, 실제 백엔드 구조의 최종 근거는 `backend/CLAUDE.md`다 |
+| v1.8 | 2026-08-20 | 사용자 요청으로 JWT 시크릿을 `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` 2개에서 `JWT_SECRET` 1개로 통합(**Access/Refresh가 같은 시크릿을 공유하도록 보안 설계 변경** — 하나가 유출되면 다른 토큰도 위조 가능해짐, 사용자가 트레이드오프를 인지하고 명시적으로 선택). 만료 시간을 하드코딩(`1h`/`14d`)에서 `JWT_ACCESS_EXPIRES_IN`/`JWT_REFRESH_EXPIRES_IN` 환경변수로 뺌(기본값은 기존과 동일하게 유지, PRD의 Refresh 14일 규칙 변경 없음). 필수 환경변수가 5개에서 4개로 줄어듦 |
 
 - 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md), [3-prd.md](./3-prd.md)(PRD v1.6), [4-user-scenario.md](./4-user-scenario.md)
 - **이 문서의 역할**: PRD 4절에서 이미 확정된 기술 스택(React 19 + Zustand + TanStack Query / Node.js + Express + `pg` / PostgreSQL 17 / 쿠키 없는 Access·Refresh JWT)을 그대로 전제하고, "그 스택으로 코드를 어떻게 배치할지"만 다룬다. 스택 재논의·신규 도구 도입 제안은 이 문서의 범위가 아니다.
 
 ## 1. 모든 스택에 공통인 최상위 원칙
 
-- **필요해지기 전에는 만들지 않는다.** 폼 제출형(FR-2.3), 마이페이지(FR-2.1/2.2), 동의 메모(FR-2.4), rate limit(FR-2.5), 삭제/엑셀 다운로드(FR-2.6) 같은 P1 기능은 6·7절 트리에 파일명과 책임만 `[P1]`로 미리 표시해 두되, 실제 폴더·코드는 P1 착수 시점에 만든다. 지금 빈 폴더나 빈 파일을 미리 파 두지 않는다 — PRD가 이미 "3일 안에 실제로 쓰는 것만" P0로 못박았기 때문에, 코드 구조도 같은 기준을 따라야 나중에 버릴 코드가 없다.
+- **필요해지기 전에는 만들지 않는다.** 폼 제출형(FR-2.3), 마이페이지(FR-2.1/2.2), 동의 메모(FR-2.4), rate limit(FR-2.5), 삭제/엑셀 다운로드(FR-2.6) 같은 후행 기능은 6·7절 트리에 파일명과 책임만 미리 표시해 두되, 실제 폴더·코드는 착수 시점에 만든다. 지금 빈 폴더나 빈 파일을 미리 파 두지 않는다 — PRD가 이미 "3일 안에 실제로 쓰는 것만" 우선 확정했기 때문에, 코드 구조도 같은 기준을 따라야 나중에 버릴 코드가 없다.
 - **레이어는 3개로 고정한다(프론트: 화면-상태-API, 백엔드: 라우트-핸들러-쿼리).** 서비스/리포지토리/유스케이스 같은 중간 레이어를 추가하지 않는다 — 테이블 5개, API 10여 개 규모에서 레이어를 늘리면 코드를 찾는 시간이 로직을 짜는 시간보다 길어진다.
 - **도메인 규칙은 문서(도메인 정의서 6~8절)의 표현 그대로 코드 한 곳에만 존재한다.** 같은 검증(대상유형 불일치, 동의 필수, 중복 방지)을 프론트·백엔드 양쪽에 구현하되, 서버 쪽이 항상 최종 판정이며 프론트 검증은 UX용 사본일 뿐임을 주석 등으로 명시하지 않아도 되게, 서버 검증 로직을 함수 하나로 모아 재사용한다(레이어 2 참고).
-- **설정 가능한 값을 늘리지 않는다.** 환경변수 5개, 에러 코드 6개, 참여 방식 2종(P0)처럼 PRD가 정한 목록 밖의 옵션·플래그·전략 패턴을 만들지 않는다. 목록이 실제로 늘어나는 시점(P1 폼 제출형 추가 등)에 그때 확장한다.
+- **설정 가능한 값을 늘리지 않는다.** 환경변수 5개, 에러 코드 6개, 참여 방식 2종(단순/룰렛)처럼 PRD가 정한 목록 밖의 옵션·플래그·전략 패턴을 만들지 않는다. 목록이 실제로 늘어나는 시점(폼 제출형 추가 등)에 그때 확장한다.
 - **파일·폴더는 기능이 생길 때 만든다.** 빈 `services/`, `utils/`, `hooks/` 같은 범용 폴더를 미리 만들지 않고, 실제로 두 번째로 재사용되는 코드가 나올 때 그 코드를 옮길 폴더를 만든다.
 
 ## 2. 의존성/레이어 원칙
@@ -62,10 +65,10 @@ PRD 7절 결정("테스트 자동화 스위트 없음, 룰렛 가중치 추첨�
 
 ## 5. 설정/보안/운영 원칙
 
-- **환경변수**: `backend/.env` 1개, PRD 4절의 5개 **필수** 변수(`DB_CONN_STRING`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`)는 하나라도 없으면 부팅을 즉시 실패시킨다(`config/env.js`). `PORT`(기본 3000), `FRONTEND_ORIGIN`(기본 `http://localhost:5173`)은 **선택** 변수로, 코드에 기본값을 두고 `.env`에 없어도 부팅이 실패하지 않는다 — 로컬 포트·프론트 개발 서버 주소처럼 환경마다 달라질 수 있는 값이라 필수 목록에 넣지 않는다.
+- **환경변수**: `backend/.env` 1개, PRD 4절의 4개 **필수** 변수(`DB_CONN_STRING`, `JWT_SECRET`, `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`)는 하나라도 없으면 부팅을 즉시 실패시킨다(`config/env.js`). `JWT_ACCESS_EXPIRES_IN`(기본 `1h`), `JWT_REFRESH_EXPIRES_IN`(기본 `14d`), `PORT`(기본 3000), `FRONTEND_ORIGIN`(기본 `http://localhost:5173`)은 **선택** 변수로, 코드에 기본값을 두고 `.env`에 없어도 부팅이 실패하지 않는다 — 로컬 포트·프론트 개발 서버 주소처럼 환경마다 달라질 수 있는 값이라 필수 목록에 넣지 않는다.
 - **`.env`는 절대 커밋하지 않는다.** 루트 `.gitignore`에 `.env`가 이미 등록되어 있으므로 그대로 유지하고, 실제 값 대신 키 이름과 예시만 담은 `.env.example`을 커밋해 팀/재설치 시 참고하게 한다. 시크릿이 코드/문서/커밋 이력에 절대 남지 않는 것이 3일짜리 프로젝트에서도 유일하게 타협 불가한 운영 규칙이다.
-- **환경 분리**: 별도의 `.env.development`/`.env.production` 다중 파일 체계를 만들지 않는다. 로컬과 운영 모두 같은 5개 키를 값만 바꿔 쓰는 `.env` 하나로 충분(스테이징 환경 자체가 없음).
-- **JWT**: HS256으로 서명하고 Access/Refresh를 서로 다른 시크릿(`JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET`)으로 분리한다 — 하나가 유출돼도 다른 토큰까지 위조되지 않게 하기 위함이며, 이미 PRD 4절이 시크릿을 2개로 나눠뒀으므로 그 결정을 그대로 따른다. payload에는 `userId`/`role`만 담고 이메일 등 개인정보는 넣지 않는다(토큰은 클라이언트에 그대로 저장되는 값이므로). 서명 검증은 `middleware/auth.js` 한 곳에서만 하고, 나머지 코드는 이 미들웨어를 통과한 `req.user`만 신뢰한다.
+- **환경 분리**: 별도의 `.env.development`/`.env.production` 다중 파일 체계를 만들지 않는다. 로컬과 운영 모두 같은 키를 값만 바꿔 쓰는 `.env` 하나로 충분(스테이징 환경 자체가 없음).
+- **JWT**: HS256으로 서명하고 Access/Refresh 모두 단일 시크릿(`JWT_SECRET`)으로 서명한다(사용자의 명시적 선택 — v1.8). 만료 시간은 `JWT_ACCESS_EXPIRES_IN`/`JWT_REFRESH_EXPIRES_IN` 환경변수로 설정한다. payload에는 `userId`/`role`만 담고 이메일 등 개인정보는 넣지 않는다(토큰은 클라이언트에 그대로 저장되는 값이므로). 서명 검증은 `middleware/auth.js` 한 곳에서만 하고, 나머지 코드는 이 미들웨어를 통과한 `req.user`만 신뢰한다.
 - **비밀번호 해시**: bcrypt, salt rounds 10. 이 규모의 트래픽에서 rounds를 더 올려 로그인 응답을 늦출 이유가 없다. 평문 비밀번호는 로그·에러 메시지 어디에도 남기지 않는다.
 - **CORS**: 운영에서는 Express가 프론트 빌드(`dist/`)를 같은 오리진으로 정적 서빙하므로(4절 배포) CORS 설정 자체가 필요 없다. 로컬 개발에서만 Vite dev 서버(다른 포트)가 API를 호출하므로, 개발 환경(`NODE_ENV !== 'production'`)에 한해 `cors` 미들웨어에 `FRONTEND_ORIGIN`(기본값 `http://localhost:5173`) 오리진 하나만 허용 목록으로 넣는다. 쿠키를 쓰지 않으므로(4절) `credentials: true`나 와일드카드(`*`)는 쓰지 않는다.
 - **에러 핸들링**: PRD 4절 포맷 `{ "error": { "code": "STRING_CODE", "message": "..." } }`을 Express 공통 에러 미들웨어 1개(`middleware/errorHandler.js`)에서만 생성한다. 개별 핸들러는 `throw new AppError('DUPLICATE_ENTRY', '...')` 형태로 던지기만 하고 응답 형식을 직접 만들지 않는다. 기존 4개 코드(`DUPLICATE_ENTRY`/`TARGET_TYPE_MISMATCH`/`EVENT_CLOSED`/`CONSENT_REQUIRED`)에 입력 검증 실패용 `VALIDATION_ERROR`(400)를 더한다. 그 외 예상 못한 예외는 전부 이 미들웨어가 500 + `INTERNAL_ERROR`로 통일 응답하고, 실제 에러 스택은 서버 로그에만 남기며 클라이언트 응답에는 절대 포함하지 않는다.
@@ -92,31 +95,31 @@ frontend/
       entriesApi.js              # 참여신청/참여신청 목록
     pages/
       events/
-        EventListPage.jsx        # P0
-        EventDetailPage.jsx      # P0 (회원/비회원 참여 폼 분기)
-        RouletteResultPage.jsx   # P0
+        EventListPage.jsx
+        EventDetailPage.jsx      # 회원/비회원 참여 폼 분기
+        RouletteResultPage.jsx
       auth/
-        LoginPage.jsx            # P0
-        SignupPage.jsx           # P0
+        LoginPage.jsx
+        SignupPage.jsx
       admin/
-        AdminLoginPage.jsx       # P0
-        AdminEventListPage.jsx   # P0 (종료 버튼 포함, 삭제 버튼은 [P1] FR-2.6)
-        AdminEventFormPage.jsx   # P0 (등록/수정 공용, 룰렛 경품 입력 포함)
-        AdminEntryListPage.jsx   # P0 (엑셀 다운로드 버튼은 [P1] FR-2.6)
-        AdminConsentNotePage.jsx # [P1] FR-2.4 신청 건별 동의 보유 내용 작성(UC15)
-      mypage/                    # [P1] FR-2.1/2.2
-        MyEntriesPage.jsx        # [P1] 참여 내역/당첨 결과 조회 + 신청 취소(FR-2.2, 룰렛은 버튼 미노출)
-        MyProfilePage.jsx        # [P1] 내 정보 조회/수정, 비밀번호 변경
+        AdminLoginPage.jsx
+        AdminEventListPage.jsx   # 종료 버튼 포함, 삭제 버튼은 FR-2.6
+        AdminEventFormPage.jsx   # 등록/수정 공용, 룰렛 경품 입력 포함
+        AdminEntryListPage.jsx   # 엑셀 다운로드 버튼은 FR-2.6
+        AdminConsentNotePage.jsx # FR-2.4 신청 건별 동의 보유 내용 작성(UC15)
+      mypage/                    # FR-2.1/2.2
+        MyEntriesPage.jsx        # 참여 내역/당첨 결과 조회 + 신청 취소(FR-2.2, 룰렛은 버튼 미노출)
+        MyProfilePage.jsx        # 내 정보 조회/수정, 비밀번호 변경
     components/
       Toast.jsx                  # 공통 에러 토스트 1개(에러 코드 6종 공용)
       ConsentCheckbox.jsx        # 동의 문구 + 보유기간 고지 (회원/비회원 공용)
-      FormFieldsInput.jsx        # [P1] FR-2.3 폼 제출형 이벤트의 관리자 정의 필드 입력(EventDetailPage에서 참여방식이 폼 제출형일 때만 사용)
+      FormFieldsInput.jsx        # FR-2.3 폼 제출형 이벤트의 관리자 정의 필드 입력(EventDetailPage에서 참여방식이 폼 제출형일 때만 사용)
     lib/
       format.js                  # 날짜/전화번호 표시 포맷 등 최소 유틸(필요해지면 추가)
-      exportCsv.js                # [P1] FR-2.6 참여자 명단 CSV 다운로드(AdminEntryListPage에서 사용)
+      exportCsv.js                # FR-2.6 참여자 명단 CSV 다운로드(AdminEntryListPage에서 사용)
 ```
 
-- `[P1]`로 표시된 파일은 이름과 역할만 미리 정해둔 것이며, 실제 코드는 만들지 않는다 — 어느 파일에 무엇이 들어갈지 미리 합의해 두면 P1 착수 시 구조를 다시 고민하지 않아도 된다는 것이 목적이고, "지금 만들지 않는다"는 원칙(1절)은 그대로 유지된다.
+- 아직 구현되지 않은 파일도 이름과 역할만 미리 정해둔 것이며, 실제 코드는 착수 시점에 만든다 — 어느 파일에 무엇이 들어갈지 미리 합의해 두면 착수 시 구조를 다시 고민하지 않아도 된다는 것이 목적이고, "지금 만들지 않는다"는 원칙(1절)은 그대로 유지된다. 구현 여부는 `docs/9-plan.md`의 Task 체크박스로 추적한다.
 - `hooks/` 같은 범용 폴더는 두지 않는다. TanStack Query 훅은 각 `pages/*.jsx` 파일 상단에서 `api/*.js` 함수를 직접 `useQuery`/`useMutation`으로 감싸 쓴다(화면이 딱 8개뿐이라 재사용 훅 추출은 두 번째 사용처가 생길 때 판단).
 
 ## 7. 백엔드 디렉토리 구조
@@ -139,17 +142,17 @@ backend/
       auth.js                    # JWT 검증 + role 체크
       errorHandler.js            # 공통 에러 응답 포맷 생성 (VALIDATION_ERROR/INTERNAL_ERROR 포함)
       requestLogger.js           # 메서드/경로/상태코드/응답시간 한 줄 로그
-      rateLimiter.js             # [P1] FR-2.5 로그인 시도 rate limit (/auth/login에만 적용)
+      rateLimiter.js             # FR-2.5 로그인 시도 rate limit (/auth/login에만 적용)
     routes/
       authRoutes.js
       eventsRoutes.js
       entriesRoutes.js
-      mypageRoutes.js            # [P1] FR-2.1/2.2
+      mypageRoutes.js            # FR-2.1/2.2
     handlers/
       authHandlers.js            # signup/login/logout/refresh
-      eventsHandlers.js          # 목록(정렬)/상세/등록/수정/종료, 상태 lazy 계산. CSV 다운로드용 전체 조회는 [P1] FR-2.6
-      entriesHandlers.js         # 참여신청(대상유형·동의·중복 검증 + 룰렛 추첨, 트랜잭션), 목록 조회. 동의 보유 내용 작성(PATCH)은 [P1] FR-2.4, 폼 제출형 formData 검증은 [P1] FR-2.3
-      mypageHandlers.js          # [P1] FR-2.1(참여내역·정보수정·비번변경)/FR-2.2(취소·재신청, 룰렛은 거부)
+      eventsHandlers.js          # 목록(정렬)/상세/등록/수정/종료, 상태 lazy 계산. CSV 다운로드용 전체 조회는 FR-2.6
+      entriesHandlers.js         # 참여신청(대상유형·동의·중복 검증 + 룰렛 추첨, 트랜잭션), 목록 조회. 동의 보유 내용 작성(PATCH)은 FR-2.4, 폼 제출형 formData 검증은 FR-2.3
+      mypageHandlers.js          # FR-2.1(참여내역·정보수정·비번변경)/FR-2.2(취소·재신청, 룰렛은 거부)
     db/queries/
       usersQueries.js
       eventsQueries.js
@@ -162,4 +165,4 @@ backend/
 ```
 
 - `handlers/entriesHandlers.js`가 도메인 정의서 6~8절 규칙(동의 필수, 대상유형 검증, 이벤트 상태 검증, 중복 판정, 가중치 추첨, 트랜잭션 확정)을 전부 담당하는 가장 무거운 파일이 되는 것은 의도된 결과다 — 참여신청이 이 프로젝트의 핵심 유스케이스이므로 규칙이 한 파일에 모여 있는 편이 흩어놓는 것보다 3일 안에 검증하기 쉽다.
-- `[P1]`로 표시된 파일·엔드포인트는 이름과 책임만 미리 정해둔 것이며, 실제 코드는 P1 착수 시점에 작성한다(1절 원칙). `mypageHandlers.js`의 취소/재신청은 도메인 6절 규칙(룰렛 게임형은 취소 불가, 재신청은 상태 전환)을 그대로 따른다.
+- 아직 구현되지 않은 파일·엔드포인트도 이름과 책임만 미리 정해둔 것이며, 실제 코드는 착수 시점에 작성한다(1절 원칙). `mypageHandlers.js`의 취소/재신청은 도메인 6절 규칙(룰렛 게임형은 취소 불가, 재신청은 상태 전환)을 그대로 따른다.

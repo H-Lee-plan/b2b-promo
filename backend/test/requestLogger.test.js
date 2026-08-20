@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const express = require('express');
 
-const requestLogger = require('../src/middleware/requestLogger');
+const requestLogger = require('../src/interfaces/http/middleware/requestLogger');
 
 test('요청 1건당 "메서드 경로 상태코드 응답시간ms" 로그 1줄을 남기고 민감정보를 포함하지 않는다', async () => {
   const app = express();

@@ -1,11 +1,19 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const express = require('express');
-const jwt = require('jsonwebtoken');
 
-const { requireAuth, requireRole } = require('../src/middleware/auth');
-const errorHandler = require('../src/middleware/errorHandler');
-const { loadEnv } = require('../src/config/env');
+const { createAuthMiddleware } = require('../src/interfaces/http/middleware/auth');
+const errorHandler = require('../src/interfaces/http/middleware/errorHandler');
+const JwtTokenService = require('../src/infrastructure/security/JwtTokenService');
+const { loadEnv } = require('../src/infrastructure/config/env');
+
+const env = loadEnv();
+const tokenService = new JwtTokenService({
+  secret: env.JWT_SECRET,
+  accessExpiresIn: '1h',
+  refreshExpiresIn: '14d',
+});
+const { requireAuth, requireRole } = createAuthMiddleware(tokenService);
 
 function buildApp() {
   const app = express();
@@ -36,19 +44,14 @@ test("role='MEMBER' 토큰으로 관리자 전용 라우트 접근 시 거부된
   const server = await startServer(buildApp());
   try {
     const port = server.address().port;
-    const env = loadEnv();
-    const memberToken = jwt.sign({ userId: 'test-user', role: 'MEMBER' }, env.JWT_ACCESS_SECRET, {
-      expiresIn: '1h',
-    });
+    const { accessToken: memberToken } = tokenService.issueTokenPair({ id: 'test-user', role: 'MEMBER' });
 
     const res = await fetch(`http://localhost:${port}/admin-only`, {
       headers: { authorization: `Bearer ${memberToken}` },
     });
     assert.strictEqual(res.status, 403);
 
-    const adminToken = jwt.sign({ userId: 'test-admin', role: 'ADMIN' }, env.JWT_ACCESS_SECRET, {
-      expiresIn: '1h',
-    });
+    const { accessToken: adminToken } = tokenService.issueTokenPair({ id: 'test-admin', role: 'ADMIN' });
     const adminRes = await fetch(`http://localhost:${port}/admin-only`, {
       headers: { authorization: `Bearer ${adminToken}` },
     });

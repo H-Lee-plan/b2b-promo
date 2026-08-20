@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-const { mapRow, mapRows } = require('../src/db/rowMapper');
+const { mapRow, mapRows } = require('../src/infrastructure/db/rowMapper');
 
 test('mapRow는 snake_case 키를 camelCase로 변환한다', () => {
   assert.deepStrictEqual(mapRow({ user_id: 1, created_at: '2026-08-13' }), {

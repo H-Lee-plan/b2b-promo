@@ -6,11 +6,14 @@
 | v1.2 | 2026-08-13 | P1(FR-2.1~2.6) Task 반영: 5절에 마이페이지·폼 제출형·동의 보유 내용 작성·로그인 rate limit·이벤트 삭제/CSV 다운로드 Task(BE-8~12, FE-11~14, OPS-3) 추가. P0(1~4절)는 절대 변경하지 않음 |
 | v1.3 | 2026-08-13 | 실제 개발 착수 시 확정된 환경변수명 반영: `DATABASE_URL` → `DB_CONN_STRING`, `.env` 위치를 `backend/.env`로 명시(DB-1, BE-1) |
 | v1.4 | 2026-08-14 | docs 정합성 재검토: PRD 참조 버전을 실제 최신본(v1.6)으로 갱신 |
+| v1.5 | 2026-08-14 | `backend/CLAUDE.md`(SOLID·Clean Architecture 필수)를 반영해 백엔드 전체를 domain/application/infrastructure/interfaces 4계층으로 전면 리팩터링(BE-1~8). 이에 따라 BE-1~8 절의 "작업 내용"에 적힌 파일 경로(`src/config/`, `src/db/`, `src/handlers/`, `src/middleware/`, `src/routes/`, `src/shared/`)는 리팩터링 이전 시점 기록이며 더 이상 실제 경로와 일치하지 않는다 — 현재 구조는 `backend/CLAUDE.md`를 따른다. 완료조건 자체(동작·검증 내용)는 변경 없이 그대로 유효하다. **주의**: 이 결정은 `5-project-principle.md`의 "레이어 3개 고정" 원칙 및 최상위 `CLAUDE.md`의 "오버엔지니어링 금지"와 상충하며, 사용자가 명시적으로 선택함(BE-9~12는 아래 새 경로 기준으로 갱신) |
+| v1.6 | 2026-08-20 | 사용자 요청으로 P0/P1 우선순위 구분 제거(PRD v1.7과 정합) — 실제로 BE-1~12(과거 P0+P1 전체)가 우선순위 구분 없이 순서대로 완료된 상태를 반영. 별도였던 "5. P1 확장 작업" 절을 없애고 BE-8~12/FE-11~14/OPS-3를 각각 2·3·4절(BE/FE/OPS)에 통합, 0절 의존성 다이어그램의 점선(P1 착수) 표시를 실선으로 통일, "일자별 배치" 표의 "4일차 이후(P1)" 행을 "이후 일정" 표현으로 정리, 부록 Task↔FR 대응표의 "4+ (P1)" 표기를 "이후"로 단순화. Task 번호(BE-8부터 등)와 완료조건 자체는 그대로 유지 — 번호가 과거 우선순위 그룹의 흔적일 뿐 더 이상 우선순위를 의미하지 않는다는 점만 달라짐 |
+| v1.7 | 2026-08-20 | 사용자 요청으로 JWT 필수 환경변수를 `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` 2개에서 `JWT_SECRET` 1개로 통합(상세는 5-project-principle.md v1.8, 3-prd.md v1.8 참고). DB-1/BE-1 절의 "5개 변수" 서술을 "필수 4개"로 갱신 |
 
 - 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [3-prd.md](./3-prd.md)(PRD v1.6), [4-user-scenario.md](./4-user-scenario.md), [5-project-principle.md](./5-project-principle.md), [7-wireframe.md](./7-wireframe.md), [8-erd.md](./8-erd.md), [8-schema.sql](./8-schema.sql)
 - **이 문서의 역할**: 앞선 문서에서 확정된 요구사항·구조·스키마를 **실행 가능한 Task 단위로 분해**한다. 새로운 요구사항이나 설계 결정을 만들지 않으며, 충돌 시 도메인 정의서 → PRD → 프로젝트 원칙 순으로 우선한다.
-- **범위**: 1~4절은 PRD 3절의 **P0(FR-1.0~1.11)**, 5절은 **P1(FR-2.1~2.6)** 을 다룬다. P1은 P0가 전부 끝난 뒤(4일차 이후) 착수하는 것을 전제로 하며, 우선순위 자체를 재조정하지 않는다(PRD 3절 그대로).
-- **Task ID 체계**: `DB-n`(데이터베이스) / `BE-n`(백엔드) / `FE-n`(프론트엔드) / `OPS-n`(통합·배포). P1 Task는 P0 번호에 이어서 채번한다(BE-8부터, FE-11부터 등)
+- **범위**: PRD 3절의 기능 목록(FR-1.0~1.11, FR-2.1~2.6) 전체를 다룬다. 우선순위 구분(P0/P1)은 두지 않는다(PRD v1.7) — FR-1.0~1.11이 먼저, FR-2.x가 이어서 진행되는 순서 자체는 유지되지만 이는 "먼저 하는 것"과 "나중에 하는 것"의 순서일 뿐 반드시 지켜야 할 우선순위 구분은 아니다.
+- **Task ID 체계**: `DB-n`(데이터베이스) / `BE-n`(백엔드) / `FE-n`(프론트엔드) / `OPS-n`(통합·배포). FR-2.x에 대응하는 Task는 FR-1.x Task 번호에 이어서 채번한다(BE-8부터, FE-11부터 등) — 번호는 과거 우선순위 그룹의 흔적이며 지금은 안정된 식별자일 뿐이다
 
 ---
 
@@ -48,16 +51,16 @@ flowchart LR
     BE7 --> OPS1
     OPS1 --> OPS2[OPS-2 배포]
 
-    OPS2 -.P1 착수.-> BE8[BE-8 마이페이지 API]
-    OPS2 -.-> BE9[BE-9 폼 제출형]
-    OPS2 -.-> BE10[BE-10 동의메모 API]
-    OPS2 -.-> BE11[BE-11 로그인 rate limit]
-    OPS2 -.-> BE12[BE-12 삭제·CSV]
+    OPS2 --> BE8[BE-8 마이페이지 API]
+    OPS2 --> BE9[BE-9 폼 제출형]
+    OPS2 --> BE10[BE-10 동의메모 API]
+    OPS2 --> BE11[BE-11 로그인 rate limit]
+    OPS2 --> BE12[BE-12 삭제·CSV]
     BE8 --> FE11[FE-11 마이페이지 화면]
     BE9 --> FE12[FE-12 폼 제출형 UI]
     BE10 --> FE13[FE-13 동의메모 화면]
     BE12 --> FE14[FE-14 삭제·CSV 버튼]
-    FE11 --> OPS3[OPS-3 P1 통합 테스트]
+    FE11 --> OPS3[OPS-3 통합 테스트 2차]
     FE12 --> OPS3
     FE13 --> OPS3
     FE14 --> OPS3
@@ -71,7 +74,7 @@ flowchart LR
 | 1일차 | DB-1, DB-2, BE-1, BE-2, BE-3, DB-3, BE-4, FE-1, FE-2, FE-3, FE-4 |
 | 2일차 | BE-5, BE-6, BE-7, FE-5, FE-6, FE-7, FE-8 |
 | 3일차 | FE-9, FE-10, OPS-1, OPS-2 |
-| 4일차 이후(P1, 시간 남을 때만) | BE-8~12, FE-11~14, OPS-3 |
+| 이후 일정 | BE-8~12, FE-11~14, OPS-3 |
 
 ---
 
@@ -83,13 +86,13 @@ flowchart LR
 
 **작업 내용**
 - PostgreSQL 17 인스턴스 준비, 프로젝트용 데이터베이스 1개 생성
-- `backend/.env` 생성, 5개 변수 정의: `DB_CONN_STRING`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`
+- `backend/.env` 생성, 4개 필수 변수 정의: `DB_CONN_STRING`, `JWT_SECRET`, `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`(선택 변수 `JWT_ACCESS_EXPIRES_IN`/`JWT_REFRESH_EXPIRES_IN`/`PORT`/`FRONTEND_ORIGIN`은 코드 기본값 사용)
 - `.env.example`(키 이름·예시값만) 작성 후 커밋 대상에 포함
 - `.gitignore`에 `.env`가 등록되어 있는지 확인
 
 **완료 조건**
 - [x] PostgreSQL 17에 접속 가능하고, 프로젝트 전용 데이터베이스가 생성되어 있다 (`postgres` 기본 DB를 로컬 개발용으로 그대로 사용하기로 결정, 접속 확인 완료)
-- [x] `.env`에 5개 변수가 모두 값과 함께 존재한다
+- [x] `.env`에 필수 변수 4개가 모두 값과 함께 존재한다
 - [x] `.env.example`이 존재하고 실제 시크릿 값이 들어있지 않다
 - [x] `git status`에 `.env`가 나타나지 않는다(무시되고 있다)
 
@@ -106,7 +109,7 @@ flowchart LR
 **완료 조건**
 - [x] 5개 테이블이 모두 생성되어 있다(`\dt`로 확인)
 - [x] `entries`에 부분 유니크 인덱스 2개(`uq_entries_event_user`, `uq_entries_event_guest_email`)가 존재하고, `INSERT ... ON CONFLICT (event_id, user_id) WHERE user_id IS NOT NULL DO NOTHING`이 예외 없이 동작한다(BE-5 전제조건) — 동일 (event_id, guest_email)로 2회 INSERT해 두 번째가 예외 없이 0행 반환됨을 확인
-- [x] `entries.user_agent`, `entries.consent_note` 컬럼이 존재한다(둘 다 nullable, 이번 P0 범위에서는 값을 채우지 않아도 무방)
+- [x] `entries.user_agent`, `entries.consent_note` 컬럼이 존재한다(둘 다 nullable, 이 Task 범위에서는 값을 채우지 않아도 무방)
 - [x] 잘못된 Enum 값 삽입 시 CHECK 제약으로 거부된다 (예: `events.status = 'FOO'` INSERT 실패) — `events_status_check` 위반으로 거부 확인
 - [x] `prizes.weight = 0` INSERT가 CHECK 제약으로 거부된다 — `prizes_weight_check` 위반으로 거부 확인
 - [x] `docs/8-schema.sql`과 `backend/src/db/schema.sql`의 내용이 동일하다 (`diff` 결과 동일)
@@ -139,13 +142,13 @@ flowchart LR
 
 **작업 내용**
 - `backend/` 초기화, 의존성 설치: `express`, `pg`, `bcrypt`, `jsonwebtoken`, `dotenv`, (개발 전용) `cors`
-- `src/config/env.js`: `.env` 5개 변수 로드 및 누락 시 **부팅 즉시 실패**
+- `src/config/env.js`: `.env` 필수 변수 로드 및 누락 시 **부팅 즉시 실패**
 - `src/db/pool.js`: `pg` Pool 생성
 - `src/server.js`: Express 초기화, 포트 리슨, 헬스체크 라우트 1개
 
 **완료 조건**
 - [x] `npm start`로 서버가 기동되고 헬스체크 요청에 200을 응답한다 (`GET /health` → `{"status":"ok"}`)
-- [x] `.env`에서 변수 하나를 지우면 서버가 부팅 단계에서 즉시 실패한다 (`JWT_ACCESS_SECRET` 제거 후 실행 → 누락 메시지 출력 + exit code 1 확인, `.env` 원상 복구 완료)
+- [x] `.env`에서 변수 하나를 지우면 서버가 부팅 단계에서 즉시 실패한다 (`JWT_SECRET` 제거 후 실행 → 누락 메시지 출력 + exit code 1 확인, `.env` 원상 복구 완료)
 - [x] `pool.js`를 통해 DB에 실제 쿼리(`SELECT 1`)가 성공한다 (`[{"?column?":1}]` 반환 확인)
 - [x] 마이그레이션 툴·ORM을 설치하지 않았다(원칙 1절) — 의존성 6개(`bcrypt`/`dotenv`/`express`/`jsonwebtoken`/`pg`/`cors`)뿐, ORM/마이그레이션 툴 없음
 - [x] (추가 검증) `src/config/env.js`/`src/db/pool.js`/`src/server.js` 자체 테스트 10건 전부 통과, 라인/브랜치/함수 커버리지 100%(`node --test --experimental-test-coverage`)
@@ -272,12 +275,12 @@ flowchart LR
 - 신청 시각 순 정렬, 0건이면 빈 배열
 
 **완료 조건**
-- [ ] 관리자 토큰으로 이벤트별 참여신청 목록을 조회할 수 있다
-- [ ] 회원 참여 건과 비회원 참여 건이 모두 조회되고 구분 가능하다
-- [ ] 각 행에 동의 시각과 확정 경품(룰렛형)이 포함된다
-- [ ] 참여신청이 0건인 이벤트 조회 시 에러가 아니라 빈 결과가 반환된다
-- [ ] 일반 회원 토큰으로 조회 시 거부된다
-- [ ] 이벤트 종료 후 조회 시 건수가 더 이상 증가하지 않는다(S-9)
+- [x] 관리자 토큰으로 이벤트별 참여신청 목록을 조회할 수 있다 (`test/entriesListHandlers.test.js` — 200 확인)
+- [x] 회원 참여 건과 비회원 참여 건이 모두 조회되고 구분 가능하다 (회원 건은 `user` 객체 포함·`guestEmail` null, 비회원 건은 `user` null·`guestEmail` 존재로 구분 확인)
+- [x] 각 행에 동의 시각과 확정 경품(룰렛형)이 포함된다 (`consentedAt` 존재, 룰렛형 `prize.name`이 참여신청 응답과 일치함을 확인)
+- [x] 참여신청이 0건인 이벤트 조회 시 에러가 아니라 빈 결과가 반환된다 (200 + `[]` 확인)
+- [x] 일반 회원 토큰으로 조회 시 거부된다 (403 확인)
+- [x] 이벤트 종료 후 조회 시 건수가 더 이상 증가하지 않는다(S-9) (종료 후 추가 참여 시도가 409로 거부되고, 목록 조회 결과 건수가 종료 전과 동일함을 확인)
 
 ---
 
@@ -291,11 +294,98 @@ flowchart LR
 - `test/duplicateEntry.test.js`: 중복 신청 판정 분기 — 기존 상태가 `APPLIED/WON/LOST`면 거부, `CANCELED`면 재신청 전환
 
 **완료 조건**
-- [ ] `node --test`로 두 테스트 파일이 모두 통과한다
-- [ ] 가중치를 (1, 5, 94)로 두고 다수 시행 시 분포가 대략 비례한다는 것이 단언으로 검증된다
-- [ ] 취소 상태 재신청이 새 레코드 생성이 아니라 상태 전환으로 처리됨이 단언으로 검증된다
-- [ ] Jest 등 테스트 프레임워크를 추가 설치하지 않았다
-- [ ] 화면 렌더링·라우팅·CRUD에 대한 테스트는 작성하지 않았다(원칙 4절)
+- [x] `node --test`로 두 테스트 파일이 모두 통과한다 (`test/drawPrize.test.js`, `test/duplicateEntry.test.js` 각각 통과, 전체 스위트 56/56)
+- [x] 가중치를 (1, 5, 94)로 두고 다수 시행 시 분포가 대략 비례한다는 것이 단언으로 검증된다 (2만 회 시행, 각 경품 비율이 기대값 ±2~3%p 이내임을 단언)
+- [x] 취소 상태 재신청이 새 레코드 생성이 아니라 상태 전환으로 처리됨이 단언으로 검증된다 (`entriesHandlers.js`의 중복 판정 분기를 `shared/duplicateEntryDecision.js`로 분리해 실제 프로덕션 로직을 순수 함수로 단언 — `CANCELED`는 `REAPPLY`, `APPLIED`/`WON`/`LOST`는 `REJECT_DUPLICATE`로 판정됨을 확인. BE-5의 통합 테스트에서도 실제 DB로 같은 동작을 이미 확인함)
+- [x] Jest 등 테스트 프레임워크를 추가 설치하지 않았다 (`package.json`에 Jest 등 추가 없음, `node:test`만 사용)
+- [x] 화면 렌더링·라우팅·CRUD에 대한 테스트는 작성하지 않았다(원칙 4절) — 이번 두 파일은 순수 함수(가중치 추첨, 중복 판정 분기) 단위 테스트만 다룸
+
+---
+
+## BE-8. 마이페이지 API (FR-2.1, FR-2.2)
+
+**선행 Task**: BE-3, BE-5
+
+**작업 내용**
+- `routes/mypageRoutes.js`, `handlers/mypageHandlers.js`(전부 인증 필요)
+- FR-2.1: 본인 참여신청 목록 조회(당첨 결과 포함), 내 정보(업체명/이름/연락처) 조회·수정, 비밀번호 변경(현재 비밀번호 확인 후 재해시)
+- FR-2.2: 참여신청 취소 — 진행중 상태의 단순 참여/폼 제출형만 허용. **룰렛 게임형은 도메인 6절에 따라 취소 자체를 거부**(엔드포인트 자체는 존재하되 항상 거부)
+- 재신청: 기존 `CANCELED` 레코드를 `APPLIED`로 전환(새 레코드 생성 금지, BE-5와 동일한 규칙 재사용)
+
+**완료 조건**
+- [x] 회원이 본인 참여신청 목록을 조회하면 상태(신청완료/취소/당첨/미당첨)와 경품명이 함께 보인다 (`test/mypageHandlers.test.js` — 룰렛 참여 후 `GET /mypage/entries`로 `status`/`prize.name`이 참여신청 응답과 일치함을 확인)
+- [x] 회원이 내 정보(업체명/이름/연락처)를 수정할 수 있다 (`PATCH /mypage/profile` 200 + 변경값 반영 확인)
+- [x] 현재 비밀번호가 틀리면 비밀번호 변경이 거부된다 (401 확인, 기존 비밀번호로 로그인 여전히 가능함도 확인)
+- [x] 진행중 단순 참여형 신청을 취소하면 상태가 `CANCELED`로 바뀐다 (`POST /mypage/entries/:id/cancel` 200 + `status='CANCELED'` 확인)
+- [x] 룰렛 게임형 신청에 대한 취소 요청은 항상 거부된다(도메인 6절, S-7) (400 `VALIDATION_ERROR` 확인, DB 상태가 `CANCELED`로 바뀌지 않았음을 확인)
+- [x] 취소 후 재신청 시 새 레코드가 아니라 기존 레코드가 `APPLIED`로 전환된다 (BE-5의 참여신청 API를 그대로 재사용 — 취소 후 재참여 시 동일 `id`로 `APPLIED` 전환, 행 수 1건 유지 확인)
+- [x] 종료된 이벤트의 신청은 취소·재신청이 모두 거부된다 (종료 후 취소 시도 409 `EVENT_CLOSED`, 재신청 시도 409 `EVENT_CLOSED` 확인)
+- [x] 다른 회원의 참여신청을 조회·취소할 수 없다(본인 것만 접근 가능) (다른 회원 토큰으로 목록 조회 시 빈 배열, 취소 시도 시 404 확인 — 쿼리 자체가 `user_id` 소유권 조건으로 필터링)
+
+---
+
+## BE-9. 참여 방식: 폼 제출형 지원 (FR-2.3)
+
+**선행 Task**: BE-4, BE-5
+
+**작업 내용** (경로는 v1.5 Clean Architecture 구조 기준 — `backend/CLAUDE.md` 참고)
+- `application/usecases/events/CreateEventUseCase.js`/`UpdateEventUseCase.js`: `participationType='FORM'`이면 관리자가 정의한 폼 필드 목록(예: 필드명 배열)을 함께 저장
+- `application/usecases/entries/CreateEntryUseCase.js`: 참여신청 시 `formData`(JSON)가 이벤트에 정의된 필드 목록과 대응하는지 검증(필수 필드 누락 시 `VALIDATION_ERROR`) 후 저장
+- 룰렛 확정 로직(BE-5)과는 무관 — 폼 제출형은 `status`가 `APPLIED`/`CANCELED`만 사용(당첨/미당첨 없음)
+
+**완료 조건**
+- [x] 관리자가 폼 제출형 이벤트를 필드 목록과 함께 등록할 수 있다 (`test/formSubmission.test.js` — `participationType=FORM`+`formFields` 배열로 201, 응답에 `formFields` 그대로 포함 확인. `formFields` 없이/빈 배열로는 400 `VALIDATION_ERROR`)
+- [x] 정의된 필수 필드를 채우지 않고 참여 시 `VALIDATION_ERROR`로 거부된다 (비회원 참여로 확인)
+- [x] 정상 제출 시 `formData`가 참여신청에 저장되고 관리자 목록(BE-6, `GET /events/:id/entries`)에서 조회 가능하다 (회원 참여로 확인)
+- [x] 폼 제출형 참여신청에는 `prizeId`/당첨·미당첨 상태가 생기지 않는다 (`prizeId`/`prize`가 `null`, `status`는 `APPLIED`임을 확인 — 룰렛 추첨 블록이 `participationType=ROULETTE`일 때만 실행되므로 구조적으로 보장됨)
+
+---
+
+## BE-10. 개인정보 동의 보유 내용 작성 API (FR-2.4)
+
+**선행 Task**: BE-6
+
+**작업 내용** (경로는 v1.5 Clean Architecture 구조 기준 — `backend/CLAUDE.md` 참고)
+- `application/usecases/entries/`에 `UpdateConsentNoteUseCase.js` 추가, `interfaces/http/controllers/entriesController.js`/`routes/entriesRoutes.js`에 관리자 전용 PATCH 엔드포인트 추가: 참여신청 건별로 `consent_note`(도메인 정의서 4절) 작성·수정
+- `consentedAt`(참여 시 자동 기록)과는 별개 필드임을 응답/문서에서 구분
+
+**완료 조건**
+- [x] 관리자가 특정 참여신청 건에 메모를 작성하면 `consent_note`에 저장된다 (`test/entriesConsentNoteHandlers.test.js` — `PATCH /events/:eventId/entries/:entryId/consent-note` 200 + 응답 `consentNote` 일치 확인)
+- [x] 같은 건에 재작성 시 값이 덮어써진다(이력 관리 없음, 오버엔지니어링 금지) (두 번째 값으로 최종 상태 확인, 별도 이력 테이블/필드 없음)
+- [x] 일반 회원 토큰으로는 작성할 수 없다 (403 확인, 인증 토큰 없을 시 401도 함께 확인)
+- [x] 메모를 작성하지 않은 건도 `consentedAt`은 정상적으로 존재한다(자동 기록과 무관함을 확인) (참여신청 생성 직후 `consentedAt` 존재·`consentNote`는 `null`임을 확인, 존재하지 않는 `entryId`는 404, `consentNote`가 문자열이 아니면 400 `VALIDATION_ERROR`도 확인)
+
+---
+
+## BE-11. 로그인 시도 Rate Limit (FR-2.5)
+
+**선행 Task**: BE-3
+
+**작업 내용** (경로는 v1.5 Clean Architecture 구조 기준 — `backend/CLAUDE.md` 참고)
+- `interfaces/http/middleware/rateLimiter.js`: `express-rate-limit` 사용, `/auth/login`에만 적용(예: 15분당 IP당 10회)
+- 초과 시 `VALIDATION_ERROR` 또는 429 응답(에러 포맷은 기존 공통 포맷 재사용, 새 에러 코드 추가하지 않음)
+
+**완료 조건**
+- [x] 짧은 시간에 로그인을 반복 시도하면 일정 횟수 이후 429가 반환된다
+- [x] `/auth/signup`, `/events` 등 다른 라우트는 이 제한의 영향을 받지 않는다
+- [x] 시간이 지나면(윈도우 만료) 다시 로그인 시도가 가능하다
+- [x] 새로운 에러 코드를 추가하지 않고 기존 공통 에러 포맷을 재사용했다
+
+---
+
+## BE-12. 이벤트 삭제 · 참여자 명단 CSV 다운로드 (FR-2.6)
+
+**선행 Task**: BE-4, BE-6
+
+**작업 내용** (경로는 v1.5 Clean Architecture 구조 기준 — `backend/CLAUDE.md` 참고)
+- `application/usecases/events/DeleteEventUseCase.js`: 관리자 전용 이벤트 삭제(참여신청이 있는 이벤트는 8-schema.sql의 `entries.event_id ON DELETE RESTRICT` 제약으로 DB가 삭제를 막는다 — 앱 코드에서 별도 검증을 중복 구현하지 않는다)
+- `application/usecases/entries/ExportEntriesCsvUseCase.js`: 이벤트별 참여신청 전체를 CSV로 변환해 반환(스트리밍·페이지네이션 없이 전체 한 번에 생성 — 이 규모에서는 충분)
+
+**완료 조건**
+- [x] 참여신청이 없는 이벤트는 관리자가 삭제할 수 있다 (`test/eventDeleteAndCsvExport.test.js` — `DELETE /api/events/:eventId` 204 + 이후 조회 404 확인)
+- [x] 참여신청이 있는 이벤트를 삭제하려 하면 DB 제약에 의해 거부된다(별도 앱 검증 코드 없이) (사전 존재 여부 확인용 조회 쿼리 없이 `DELETE` 실행 → `entries.event_id ON DELETE RESTRICT` 위반(`23503`)을 리포지토리에서 그대로 받아 409로 변환. 409 확인 + 이벤트가 삭제되지 않았음을 확인)
+- [x] 참여신청 목록을 CSV로 다운로드하면 BE-6 목록 조회와 동일한 항목(구분/업체명/담당자/이메일/동의시각/경품/상태)이 포함된다 (`GET /api/events/:eventId/entries/export` — 헤더/행 값 확인, 0건일 때 헤더만 반환됨도 확인)
+- [x] 한글이 포함된 CSV가 엑셀에서 깨지지 않는다(인코딩 처리) (UTF-8 BOM(`EF BB BF`) 선행 바이트 확인)
 
 ---
 
@@ -388,7 +478,7 @@ flowchart LR
 - [ ] 회원/비회원 참여 건이 구분되어 표시된다
 - [ ] 동의 시각과 확정 경품이 각 행에 표시된다
 - [ ] 참여신청 0건일 때 에러가 아니라 빈 상태 문구가 보인다
-- [ ] 엑셀 다운로드 버튼을 만들지 않았다(FR-2.6은 P1)
+- [ ] 엑셀 다운로드 버튼을 만들지 않았다(FR-2.6은 별도 Task(FE-14)에서 후행 구현)
 
 ---
 
@@ -492,141 +582,6 @@ flowchart LR
 
 ---
 
-# 4. 통합 · 배포 (OPS)
-
-## OPS-1. 통합 테스트
-
-**선행 Task**: FE-10, BE-7
-
-**작업 내용**
-- 사용자 시나리오 문서(S-1~S-10)를 체크리스트로 삼아 실제 브라우저에서 전 구간 수동 검증
-- 발견된 버그 수정
-
-**완료 조건**
-- [ ] S-1 비회원 룰렛 참여 → 결과 확인(모바일 브라우저)
-- [ ] S-2 미동의 참여 거부
-- [ ] S-3 대상유형 불일치 거부(양방향)
-- [ ] S-4 동일 이메일 중복 참여 거부
-- [ ] S-5 재추첨 불가(재시도 경로 없음)
-- [ ] S-6 가입 → 로그인 → 회원 전용 이벤트 참여
-- [ ] S-8 관리자 이벤트 등록 → 운영 → 조기 종료
-- [ ] S-9 종료 후 신규 참여 차단 및 목록 건수 고정
-- [ ] S-10 마감일 경과 이벤트가 종료로 표시되고 참여 불가
-- [ ] 관리자 화면에서 위 참여 건들이 모두 조회된다
-
----
-
-## OPS-2. 배포
-
-**선행 Task**: OPS-1
-
-**작업 내용**
-- 프론트 빌드(`dist/`) → Express 정적 서빙 연결
-- 단일 VM에 배포, Caddy 리버스 프록시(자동 TLS), `pm2` 프로세스 관리
-- 운영 `.env` 구성(값만 교체, 파일 구조는 동일)
-- Docker/오케스트레이션/CI-CD 파이프라인 미도입
-
-**완료 조건**
-- [ ] HTTPS로 서비스에 접속된다(Caddy 자동 TLS)
-- [ ] 같은 오리진에서 프론트와 API가 모두 동작한다(운영 CORS 설정 불필요 확인)
-- [ ] `pm2`로 프로세스가 관리되고 재시작 시 자동 복구된다
-- [ ] 운영 서버에 `.env`가 존재하고 저장소에는 커밋되지 않았다
-- [ ] 관리자 시드 계정으로 운영 환경 로그인이 성공한다
-- [ ] 실제 모바일 기기에서 비회원 참여 전 구간이 동작한다
-
----
-
-# 5. P1 확장 작업 (FR-2.1~2.6)
-
-이 절은 PRD 3절 P1 범위를 다룬다. **P0(1~4절)가 전부 끝난 뒤에만 착수한다**(PRD 6절 버퍼 정책 — P0 미완성 시 P1은 전부 4일차 이후로 미룸). 우선순위나 FR 번호를 재조정하지 않으며, 5-project-principle.md 6·7절에 `[P1]`로 미리 이름만 정해둔 파일들을 실제로 구현한다.
-
-## BE-8. 마이페이지 API (FR-2.1, FR-2.2)
-
-**선행 Task**: BE-3, BE-5 (P0 전체 완료 후 착수)
-
-**작업 내용**
-- `routes/mypageRoutes.js`, `handlers/mypageHandlers.js`(전부 인증 필요)
-- FR-2.1: 본인 참여신청 목록 조회(당첨 결과 포함), 내 정보(업체명/이름/연락처) 조회·수정, 비밀번호 변경(현재 비밀번호 확인 후 재해시)
-- FR-2.2: 참여신청 취소 — 진행중 상태의 단순 참여/폼 제출형만 허용. **룰렛 게임형은 도메인 6절에 따라 취소 자체를 거부**(엔드포인트 자체는 존재하되 항상 거부)
-- 재신청: 기존 `CANCELED` 레코드를 `APPLIED`로 전환(새 레코드 생성 금지, BE-5와 동일한 규칙 재사용)
-
-**완료 조건**
-- [ ] 회원이 본인 참여신청 목록을 조회하면 상태(신청완료/취소/당첨/미당첨)와 경품명이 함께 보인다
-- [ ] 회원이 내 정보(업체명/이름/연락처)를 수정할 수 있다
-- [ ] 현재 비밀번호가 틀리면 비밀번호 변경이 거부된다
-- [ ] 진행중 단순 참여형 신청을 취소하면 상태가 `CANCELED`로 바뀐다
-- [ ] 룰렛 게임형 신청에 대한 취소 요청은 항상 거부된다(도메인 6절, S-7)
-- [ ] 취소 후 재신청 시 새 레코드가 아니라 기존 레코드가 `APPLIED`로 전환된다
-- [ ] 종료된 이벤트의 신청은 취소·재신청이 모두 거부된다
-- [ ] 다른 회원의 참여신청을 조회·취소할 수 없다(본인 것만 접근 가능)
-
----
-
-## BE-9. 참여 방식: 폼 제출형 지원 (FR-2.3)
-
-**선행 Task**: BE-4, BE-5
-
-**작업 내용**
-- `handlers/eventsHandlers.js`: 이벤트 등록/수정 시 `participationType='FORM'`이면 관리자가 정의한 폼 필드 목록(예: 필드명 배열)을 함께 저장
-- `handlers/entriesHandlers.js`: 참여신청 시 `formData`(JSON)가 이벤트에 정의된 필드 목록과 대응하는지 검증(필수 필드 누락 시 `VALIDATION_ERROR`) 후 저장
-- 룰렛 확정 로직(BE-5)과는 무관 — 폼 제출형은 `status`가 `APPLIED`/`CANCELED`만 사용(당첨/미당첨 없음)
-
-**완료 조건**
-- [ ] 관리자가 폼 제출형 이벤트를 필드 목록과 함께 등록할 수 있다
-- [ ] 정의된 필수 필드를 채우지 않고 참여 시 `VALIDATION_ERROR`로 거부된다
-- [ ] 정상 제출 시 `formData`가 참여신청에 저장되고 관리자 목록(BE-6)에서 조회 가능하다
-- [ ] 폼 제출형 참여신청에는 `prizeId`/당첨·미당첨 상태가 생기지 않는다
-
----
-
-## BE-10. 개인정보 동의 보유 내용 작성 API (FR-2.4)
-
-**선행 Task**: BE-6
-
-**작업 내용**
-- `entriesHandlers.js`에 관리자 전용 PATCH 엔드포인트 추가: 참여신청 건별로 `consent_note`(도메인 정의서 4절) 작성·수정
-- `consentedAt`(참여 시 자동 기록)과는 별개 필드임을 응답/문서에서 구분
-
-**완료 조건**
-- [ ] 관리자가 특정 참여신청 건에 메모를 작성하면 `consent_note`에 저장된다
-- [ ] 같은 건에 재작성 시 값이 덮어써진다(이력 관리 없음, 오버엔지니어링 금지)
-- [ ] 일반 회원 토큰으로는 작성할 수 없다
-- [ ] 메모를 작성하지 않은 건도 `consentedAt`은 정상적으로 존재한다(자동 기록과 무관함을 확인)
-
----
-
-## BE-11. 로그인 시도 Rate Limit (FR-2.5)
-
-**선행 Task**: BE-3
-
-**작업 내용**
-- `middleware/rateLimiter.js`: `express-rate-limit` 사용, `/auth/login`에만 적용(예: 15분당 IP당 10회)
-- 초과 시 `VALIDATION_ERROR` 또는 429 응답(에러 포맷은 기존 공통 포맷 재사용, 새 에러 코드 추가하지 않음)
-
-**완료 조건**
-- [ ] 짧은 시간에 로그인을 반복 시도하면 일정 횟수 이후 429가 반환된다
-- [ ] `/auth/signup`, `/events` 등 다른 라우트는 이 제한의 영향을 받지 않는다
-- [ ] 시간이 지나면(윈도우 만료) 다시 로그인 시도가 가능하다
-- [ ] 새로운 에러 코드를 추가하지 않고 기존 공통 에러 포맷을 재사용했다
-
----
-
-## BE-12. 이벤트 삭제 · 참여자 명단 CSV 다운로드 (FR-2.6)
-
-**선행 Task**: BE-4, BE-6
-
-**작업 내용**
-- `eventsHandlers.js`: 관리자 전용 이벤트 삭제 엔드포인트(참여신청이 있는 이벤트는 8-schema.sql의 `entries.event_id ON DELETE RESTRICT` 제약으로 DB가 삭제를 막는다 — 앱 코드에서 별도 검증을 중복 구현하지 않는다)
-- `entriesHandlers.js`: 이벤트별 참여신청 전체를 CSV로 변환해 반환하는 엔드포인트(스트리밍·페이지네이션 없이 전체 한 번에 생성 — 이 규모에서는 충분)
-
-**완료 조건**
-- [ ] 참여신청이 없는 이벤트는 관리자가 삭제할 수 있다
-- [ ] 참여신청이 있는 이벤트를 삭제하려 하면 DB 제약에 의해 거부된다(별도 앱 검증 코드 없이)
-- [ ] 참여신청 목록을 CSV로 다운로드하면 BE-6 목록 조회와 동일한 항목(구분/업체명/담당자/이메일/동의시각/경품/상태)이 포함된다
-- [ ] 한글이 포함된 CSV가 엑셀에서 깨지지 않는다(인코딩 처리)
-
----
-
 ## FE-11. 마이페이지 화면 (FR-2.1, FR-2.2)
 
 **선행 Task**: BE-8, FE-2
@@ -691,12 +646,56 @@ flowchart LR
 
 ---
 
-## OPS-3. P1 통합 테스트
+# 4. 통합 · 배포 (OPS)
+
+## OPS-1. 통합 테스트
+
+**선행 Task**: FE-10, BE-7
+
+**작업 내용**
+- 사용자 시나리오 문서(S-1~S-10)를 체크리스트로 삼아 실제 브라우저에서 전 구간 수동 검증
+- 발견된 버그 수정
+
+**완료 조건**
+- [ ] S-1 비회원 룰렛 참여 → 결과 확인(모바일 브라우저)
+- [ ] S-2 미동의 참여 거부
+- [ ] S-3 대상유형 불일치 거부(양방향)
+- [ ] S-4 동일 이메일 중복 참여 거부
+- [ ] S-5 재추첨 불가(재시도 경로 없음)
+- [ ] S-6 가입 → 로그인 → 회원 전용 이벤트 참여
+- [ ] S-8 관리자 이벤트 등록 → 운영 → 조기 종료
+- [ ] S-9 종료 후 신규 참여 차단 및 목록 건수 고정
+- [ ] S-10 마감일 경과 이벤트가 종료로 표시되고 참여 불가
+- [ ] 관리자 화면에서 위 참여 건들이 모두 조회된다
+
+---
+
+## OPS-2. 배포
+
+**선행 Task**: OPS-1
+
+**작업 내용**
+- 프론트 빌드(`dist/`) → Express 정적 서빙 연결
+- 단일 VM에 배포, Caddy 리버스 프록시(자동 TLS), `pm2` 프로세스 관리
+- 운영 `.env` 구성(값만 교체, 파일 구조는 동일)
+- Docker/오케스트레이션/CI-CD 파이프라인 미도입
+
+**완료 조건**
+- [ ] HTTPS로 서비스에 접속된다(Caddy 자동 TLS)
+- [ ] 같은 오리진에서 프론트와 API가 모두 동작한다(운영 CORS 설정 불필요 확인)
+- [ ] `pm2`로 프로세스가 관리되고 재시작 시 자동 복구된다
+- [ ] 운영 서버에 `.env`가 존재하고 저장소에는 커밋되지 않았다
+- [ ] 관리자 시드 계정으로 운영 환경 로그인이 성공한다
+- [ ] 실제 모바일 기기에서 비회원 참여 전 구간이 동작한다
+
+---
+
+## OPS-3. 통합 테스트 2차
 
 **선행 Task**: FE-11, FE-12, FE-13, FE-14, BE-11
 
 **작업 내용**
-- 사용자 시나리오 S-7(룰렛 취소 불가 확인)을 포함해 P1 기능 전 구간 수동 검증
+- 사용자 시나리오 S-7(룰렛 취소 불가 확인)을 포함해 이후 추가된 기능 전 구간 수동 검증
 
 **완료 조건**
 - [ ] S-7: 회원이 룰렛 신청은 취소 버튼이 없고, 단순 참여형 신청은 취소 후 재신청 시 상태 전환됨을 확인
@@ -704,7 +703,7 @@ flowchart LR
 - [ ] 동의 보유 내용 작성이 저장·조회된다
 - [ ] 로그인 반복 시도 시 rate limit이 걸린다
 - [ ] 참여신청 없는 이벤트 삭제, 있는 이벤트 삭제 거부, CSV 다운로드가 모두 동작한다
-- [ ] P0 기능(OPS-1에서 확인한 것들)이 P1 추가 이후에도 회귀 없이 그대로 동작한다
+- [ ] FR-1.0~1.11 기능(OPS-1에서 확인한 것들)이 이후 추가된 기능과 함께도 회귀 없이 그대로 동작한다
 
 ---
 
@@ -734,20 +733,20 @@ flowchart LR
 | FE-10 | FR-1.11 | 3 |
 | OPS-1 | 전체 | 3 |
 | OPS-2 | 전체 | 3 |
-| BE-8 | FR-2.1, FR-2.2 | 4+ (P1) |
-| BE-9 | FR-2.3 | 4+ (P1) |
-| BE-10 | FR-2.4 | 4+ (P1) |
-| BE-11 | FR-2.5 | 4+ (P1) |
-| BE-12 | FR-2.6 | 4+ (P1) |
-| FE-11 | FR-2.1, FR-2.2 | 4+ (P1) |
-| FE-12 | FR-2.3 | 4+ (P1) |
-| FE-13 | FR-2.4 | 4+ (P1) |
-| FE-14 | FR-2.6 | 4+ (P1) |
-| OPS-3 | FR-2.1~2.6 | 4+ (P1) |
+| BE-8 | FR-2.1, FR-2.2 | 이후 |
+| BE-9 | FR-2.3 | 이후 |
+| BE-10 | FR-2.4 | 이후 |
+| BE-11 | FR-2.5 | 이후 |
+| BE-12 | FR-2.6 | 이후 |
+| FE-11 | FR-2.1, FR-2.2 | 이후 |
+| FE-12 | FR-2.3 | 이후 |
+| FE-13 | FR-2.4 | 이후 |
+| FE-14 | FR-2.6 | 이후 |
+| OPS-3 | FR-2.1~2.6 | 이후 |
 
 ## 부록: 절단 순서 (PRD 6절 버퍼 정책)
 
-3일차 오후까지 P0가 끝나지 않으면 아래 순서로 축소한다. **인증(BE-3), 참여신청 핵심(BE-5), 관리자 이벤트 관리(BE-4/FE-4), 결과 화면(FE-8)은 절단 대상이 아니다.**
+3일차 오후까지 FR-1.0~1.11이 끝나지 않으면 아래 순서로 축소한다. **인증(BE-3), 참여신청 핵심(BE-5), 관리자 이벤트 관리(BE-4/FE-4), 결과 화면(FE-8)은 절단 대상이 아니다.**
 
 1. FE-4의 진행중 상태 필드별 수정 제한 로직 (등록만 되면 됨)
 2. FE-8의 룰렛 회전 애니메이션 (결과 텍스트만 표시)

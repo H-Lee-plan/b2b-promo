@@ -5,6 +5,7 @@
 |---|---|---|
 | v1.1 | 2026-08-13 | ui-designer 재검토 반영: EventDetailPage 대상유형 불일치(③) 화면에서 반대 케이스(로그인 회원이 비회원 전용 이벤트 접근)에 로그인/회원가입 버튼이 그대로 노출되어 상태 분기가 혼란을 주던 문제를 수정, 두 방향을 별도 목업으로 분리 |
 | v1.2 | 2026-08-14 | docs 정합성 재검토: PRD 참조 버전을 실제 최신본(v1.6)으로 갱신 |
+| v1.3 | 2026-08-20 | 사용자 요청으로 P0/P1 우선순위 구분 제거(PRD v1.7과 정합) — 9절 제목·설명과 부록 표의 P0/P1 표기 정리(부록 표에서 우선순위 컬럼 삭제) |
 
 - 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [3-prd.md](./3-prd.md)(PRD v1.6), [4-user-scenario.md](./4-user-scenario.md)(사용자 시나리오), [5-project-principle.md](./5-project-principle.md)(프로젝트 구조, 6·7절)
 - **이 문서의 역할**: PRD 5절 화면 목록을 기준으로 각 화면에 어떤 정보/컴포넌트가 어느 위치에 있는지 저해상도 텍스트(ASCII) 와이어프레임으로 보여준다. 픽셀 단위 디자인, 색상, 폰트는 다루지 않는다. 화면 파일명은 5-project-principle.md 6·7절 디렉토리 구조와 1:1 대응한다.
@@ -355,31 +356,31 @@
 
 ---
 
-## 9. P1 화면 (간략 표시)
+## 9. 후행 구현 화면 (간략 표시)
 
-파일명은 5-project-principle.md 6·7절 기준. P1은 이름과 핵심 요소만 미리 정해두고 실제 구현은 착수 시점에 진행.
+파일명은 5-project-principle.md 6·7절 기준. 이름과 핵심 요소만 미리 정해두고 실제 구현은 착수 시점에 진행.
 
-- **mypage/MyEntriesPage.jsx** [P1, FR-2.1/2.2] — 참여 이벤트 목록 + 상태(신청완료/취소/당첨/미당첨) + 경품명, 진행중 단순참여형만 취소 버튼 노출(룰렛은 버튼 자체 없음, S-7)
-- **mypage/MyProfilePage.jsx** [P1, FR-2.1] — 내 정보(업체명/이름/연락처) 조회·수정, 비밀번호 변경 폼
-- **admin/AdminConsentNotePage.jsx** [P1, FR-2.4] — 참여신청 건별 개인정보 동의 보유 내용 관리자 메모 입력란 1개
+- **mypage/MyEntriesPage.jsx** (FR-2.1/2.2) — 참여 이벤트 목록 + 상태(신청완료/취소/당첨/미당첨) + 경품명, 진행중 단순참여형만 취소 버튼 노출(룰렛은 버튼 자체 없음, S-7)
+- **mypage/MyProfilePage.jsx** (FR-2.1) — 내 정보(업체명/이름/연락처) 조회·수정, 비밀번호 변경 폼
+- **admin/AdminConsentNotePage.jsx** (FR-2.4) — 참여신청 건별 개인정보 동의 보유 내용 관리자 메모 입력란 1개
 
 ---
 
 ## 부록: 화면-FR 대응표
 
-| 화면 파일 | FR | 우선순위 | 반응형 |
-|---|---|---|---|
-| EventListPage.jsx | FR-1.3 | P0 | 모바일+데스크톱(768px) |
-| EventDetailPage.jsx | FR-1.4, FR-1.5, FR-1.6 | P0 | 모바일+데스크톱(768px) |
-| RouletteResultPage.jsx | FR-1.6, FR-1.10 | P0 | 모바일+데스크톱(768px) |
-| LoginPage.jsx | FR-1.2 | P0 | 모바일+데스크톱(768px) |
-| SignupPage.jsx | FR-1.1 | P0 | 모바일+데스크톱(768px) |
-| AdminLoginPage.jsx | FR-1.0, FR-1.2 | P0 | 데스크톱 |
-| AdminEventListPage.jsx | FR-1.8 | P0 | 데스크톱 |
-| AdminEventFormPage.jsx | FR-1.7 | P0 | 데스크톱 |
-| AdminEntryListPage.jsx | FR-1.9 | P0 | 데스크톱 |
-| mypage/MyEntriesPage.jsx | FR-2.1, FR-2.2 | P1 | 모바일+데스크톱(768px) |
-| mypage/MyProfilePage.jsx | FR-2.1 | P1 | 모바일+데스크톱(768px) |
-| admin/AdminConsentNotePage.jsx | FR-2.4 | P1 | 데스크톱 |
+| 화면 파일 | FR | 반응형 |
+|---|---|---|
+| EventListPage.jsx | FR-1.3 | 모바일+데스크톱(768px) |
+| EventDetailPage.jsx | FR-1.4, FR-1.5, FR-1.6 | 모바일+데스크톱(768px) |
+| RouletteResultPage.jsx | FR-1.6, FR-1.10 | 모바일+데스크톱(768px) |
+| LoginPage.jsx | FR-1.2 | 모바일+데스크톱(768px) |
+| SignupPage.jsx | FR-1.1 | 모바일+데스크톱(768px) |
+| AdminLoginPage.jsx | FR-1.0, FR-1.2 | 데스크톱 |
+| AdminEventListPage.jsx | FR-1.8 | 데스크톱 |
+| AdminEventFormPage.jsx | FR-1.7 | 데스크톱 |
+| AdminEntryListPage.jsx | FR-1.9 | 데스크톱 |
+| mypage/MyEntriesPage.jsx | FR-2.1, FR-2.2 | 모바일+데스크톱(768px) |
+| mypage/MyProfilePage.jsx | FR-2.1 | 모바일+데스크톱(768px) |
+| admin/AdminConsentNotePage.jsx | FR-2.4 | 데스크톱 |
 </content>
 </invoke>

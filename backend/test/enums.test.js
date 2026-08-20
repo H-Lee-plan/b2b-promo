@@ -7,7 +7,7 @@ const {
   EVENT_STATUS,
   ENTRY_STATUS,
   USER_ROLE,
-} = require('../src/shared/enums');
+} = require('../src/domain/enums');
 
 test('Enum 상수 값이 프로젝트 원칙 3절 매핑표와 스펠링까지 일치한다', () => {
   assert.deepStrictEqual(TARGET_TYPE, { MEMBER_ONLY: 'MEMBER_ONLY', GUEST_ONLY: 'GUEST_ONLY', COMMON: 'COMMON' });

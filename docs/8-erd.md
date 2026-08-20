@@ -4,6 +4,7 @@
 | 버전 | 일시 | 변경 내용 |
 |---|---|---|
 | v1.0 | 2026-08-13 | 최초 작성 |
+| v1.1 | 2026-08-20 | 사용자 요청으로 P0/P1 우선순위 구분 제거(PRD v1.7과 정합) — `consent_note` 설명의 "P1" 표기 삭제 |
 
 - 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7) 4~5절, [3-prd.md](./3-prd.md)(PRD v1.6) 4·8절, [5-project-principle.md](./5-project-principle.md) 7절
 - **이 문서의 역할**: 새로운 스키마를 설계하지 않는다. 도메인 정의서 4절(엔티티) · 5절(관계)과 PRD 4절(테이블 5개, `schema.sql` 1파일, ORM 없음)에서 이미 확정된 구조를 Mermaid ERD로 시각화만 한다. 컬럼명은 프로젝트 원칙(5-project-principle.md 3절)에 따라 DB는 snake_case, 매핑은 애플리케이션 레이어(`rowMapper.js`)에서 처리한다.
@@ -61,7 +62,7 @@ erDiagram
         uuid prize_id FK "룰렛 게임형에서 확정된 경품, 그 외 null"
         datetime applied_at
         string user_agent "참여 시 요청 헤더 저장, PRD 8절 모바일 참여 비중 측정용(선택)"
-        string consent_note "관리자가 사후 작성하는 동의 보유 내용(FR-2.4, P1, 선택)"
+        string consent_note "관리자가 사후 작성하는 동의 보유 내용(FR-2.4, 선택)"
     }
 
     refresh_tokens {

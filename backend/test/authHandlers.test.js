@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 const app = require('../src/server');
-const pool = require('../src/db/pool');
+const pool = require('../src/infrastructure/db/pool');
 
 function uniqueEmail() {
   return `be3-${Date.now()}-${Math.floor(Math.random() * 1e6)}@corp.com`;

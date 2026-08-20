@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert');
 const express = require('express');
 
-const { AppError } = require('../src/shared/errors');
-const errorHandler = require('../src/middleware/errorHandler');
+const { AppError } = require('../src/domain/errors/AppError');
+const errorHandler = require('../src/interfaces/http/middleware/errorHandler');
 
 function buildApp() {
   const app = express();

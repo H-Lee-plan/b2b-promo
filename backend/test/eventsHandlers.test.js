@@ -3,8 +3,8 @@ const assert = require('node:assert');
 const jwt = require('jsonwebtoken');
 
 const app = require('../src/server');
-const pool = require('../src/db/pool');
-const { loadEnv } = require('../src/config/env');
+const pool = require('../src/infrastructure/db/pool');
+const { loadEnv } = require('../src/infrastructure/config/env');
 
 async function startServer() {
   const server = app.listen(0);
@@ -14,12 +14,12 @@ async function startServer() {
 
 function adminToken() {
   const env = loadEnv();
-  return jwt.sign({ userId: 'test-admin', role: 'ADMIN' }, env.JWT_ACCESS_SECRET, { expiresIn: '1h' });
+  return jwt.sign({ userId: 'test-admin', role: 'ADMIN' }, env.JWT_SECRET, { expiresIn: '1h' });
 }
 
 function memberToken() {
   const env = loadEnv();
-  return jwt.sign({ userId: 'test-member', role: 'MEMBER' }, env.JWT_ACCESS_SECRET, { expiresIn: '1h' });
+  return jwt.sign({ userId: 'test-member', role: 'MEMBER' }, env.JWT_SECRET, { expiresIn: '1h' });
 }
 
 async function deleteEvent(id) {
