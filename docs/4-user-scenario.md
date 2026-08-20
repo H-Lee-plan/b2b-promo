@@ -8,7 +8,7 @@
 | v1.3 | 2026-08-20 | 사용자 요청으로 P0/P1 우선순위 구분 제거(PRD v1.7과 정합) — 시나리오 목록의 우선순위 컬럼 삭제, S-7 제목의 `[P1]` 표시 제거, 본문의 P0/P1 언급을 우선순위 비의존 표현으로 수정 |
 | v1.4 | 2026-08-20 | 백엔드 실구현 대비 정합성 감사 반영: PRD 참조 버전을 v1.6→v1.8로 갱신, S-1 3단계의 "국내 휴대전화 형식을 즉시 검증" 서술이 실제로는 필수값 여부만 검증하는 코드와 달라 수정 |
 
-- 관련 문서: [1-domain-definition.md](./1-domain-definition.md) (도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md) (유스케이스), [3-prd.md](./3-prd.md) (PRD v1.8)
+- 관련 문서: [1-domain-definition.md](./1-domain-definition.md) (도메인 정의서 v1.8), [2-usecase.md](./2-usecase.md) (유스케이스), [3-prd.md](./3-prd.md) (PRD v1.8)
 
 ## 이 문서의 역할
 

@@ -8,8 +8,9 @@
 | v1.3 | 2026-08-20 | 사용자 요청으로 P0/P1 우선순위 구분 제거(PRD v1.7과 정합) — 9절 제목·설명과 부록 표의 P0/P1 표기 정리(부록 표에서 우선순위 컬럼 삭제) |
 | v1.4 | 2026-08-20 | `docs/10-style.md`(스타일 가이드) 최초 작성에 따라 관련 문서 목록에 추가하고, "이 문서의 역할"에 색상·타이포그래피·모션 등 시각 규칙의 실제 근거 문서를 명시(내용 자체는 원래도 겹치지 않았으므로 ASCII 목업은 변경 없음) |
 | v1.5 | 2026-08-20 | 백엔드 실구현 대비 정합성 감사 반영: PRD 참조 버전을 v1.6→v1.8로 갱신 |
+| v1.6 | 2026-08-20 | 프론트엔드 FE-1~FE-14 완료에 따른 정합성 감사 반영: 9절을 "미착수" 서술에서 "구현 완료" 서술로 수정, 별도 파일로 계획됐던 `admin/AdminConsentNotePage.jsx`가 실제로는 `AdminEntryListPage.jsx` 내 인라인 편집으로 구현됐음을 9절·부록 표에 반영(부록 표에서 해당 행 삭제, 대신 AdminEntryListPage.jsx 행에 FR-2.4 추가). 부록 표에 FR-2.3(폼 제출형)·FR-2.6(삭제/CSV) 매핑 누락분 보강. 문서 하단에 남아있던 편집 도구 잔여 텍스트 제거. 관련 문서의 도메인 정의서 버전을 v1.7→v1.8로 갱신 |
 
-- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [3-prd.md](./3-prd.md)(PRD v1.8), [4-user-scenario.md](./4-user-scenario.md)(사용자 시나리오), [5-project-principle.md](./5-project-principle.md)(프로젝트 구조, 6·7절), [10-style.md](./10-style.md)(스타일 가이드 — 색상·타이포그래피·간격·컴포넌트·모션)
+- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.8), [3-prd.md](./3-prd.md)(PRD v1.8), [4-user-scenario.md](./4-user-scenario.md)(사용자 시나리오), [5-project-principle.md](./5-project-principle.md)(프로젝트 구조, 6·7절), [10-style.md](./10-style.md)(스타일 가이드 — 색상·타이포그래피·간격·컴포넌트·모션)
 - **이 문서의 역할**: PRD 5절 화면 목록을 기준으로 각 화면에 어떤 정보/컴포넌트가 어느 위치에 있는지 저해상도 텍스트(ASCII) 와이어프레임으로 보여준다. **픽셀 단위 디자인, 색상, 폰트, 모션은 다루지 않는다 — 그 내용은 `docs/10-style.md`가 최종 근거다.** 화면 파일명은 5-project-principle.md 6·7절 디렉토리 구조와 1:1 대응한다.
 - **표기 기준**: 참여자용 화면(모바일 반응형 필수, PRD 5절)은 좁은 폭 박스로, 관리자 백오피스(반응형 대상 아님)는 데스크톱 폭 박스로 그린다. PRD 5절 화면 목록에 없는 요소(검색창/필터/페이지네이션 등)는 추가하지 않는다.
 - **반응형 브레이크포인트**: 참여자용 화면은 단일 기준점(768px)만 사용한다 — 768px 미만은 모바일 레이아웃, 768px 이상은 데스크톱 레이아웃. 태블릿 등 중간 단계는 별도로 두지 않는다.
@@ -358,13 +359,13 @@
 
 ---
 
-## 9. 후행 구현 화면 (간략 표시)
+## 9. 후행 구현 화면 (FE-11~FE-13 완료, 구현 완료 기준으로 갱신)
 
-파일명은 5-project-principle.md 6·7절 기준. 이름과 핵심 요소만 미리 정해두고 실제 구현은 착수 시점에 진행.
+파일명은 5-project-principle.md 6·7절 기준. 아래 화면 모두 실제로 구현이 끝났다(9-plan.md FE-11~FE-13 완료조건 참고).
 
-- **mypage/MyEntriesPage.jsx** (FR-2.1/2.2) — 참여 이벤트 목록 + 상태(신청완료/취소/당첨/미당첨) + 경품명, 진행중 단순참여형만 취소 버튼 노출(룰렛은 버튼 자체 없음, S-7)
+- **mypage/MyEntriesPage.jsx** (FR-2.1/2.2) — 참여 이벤트 목록 + 상태(신청완료/취소/당첨/미당첨) + 경품명, 진행중 단순참여·폼 제출형만 취소 버튼 노출(룰렛은 버튼 자체 없음, S-7)
 - **mypage/MyProfilePage.jsx** (FR-2.1) — 내 정보(업체명/이름/연락처) 조회·수정, 비밀번호 변경 폼
-- **admin/AdminConsentNotePage.jsx** (FR-2.4) — 참여신청 건별 개인정보 동의 보유 내용 관리자 메모 입력란 1개
+- **동의 보유 내용 작성** (FR-2.4) — 별도 화면(`admin/AdminConsentNotePage.jsx`)을 만들지 않고 `admin/AdminEntryListPage.jsx` 내 참여신청 행별 인라인 편집(`ConsentNoteCell`)으로 구현했다(계획 단계에서 이미 "또는 인라인 편집"을 허용해 두었던 선택지)
 
 ---
 
@@ -373,16 +374,13 @@
 | 화면 파일 | FR | 반응형 |
 |---|---|---|
 | EventListPage.jsx | FR-1.3 | 모바일+데스크톱(768px) |
-| EventDetailPage.jsx | FR-1.4, FR-1.5, FR-1.6 | 모바일+데스크톱(768px) |
+| EventDetailPage.jsx | FR-1.4, FR-1.5, FR-1.6, FR-2.3 | 모바일+데스크톱(768px) |
 | RouletteResultPage.jsx | FR-1.6, FR-1.10 | 모바일+데스크톱(768px) |
 | LoginPage.jsx | FR-1.2 | 모바일+데스크톱(768px) |
 | SignupPage.jsx | FR-1.1 | 모바일+데스크톱(768px) |
 | AdminLoginPage.jsx | FR-1.0, FR-1.2 | 데스크톱 |
-| AdminEventListPage.jsx | FR-1.8 | 데스크톱 |
-| AdminEventFormPage.jsx | FR-1.7 | 데스크톱 |
-| AdminEntryListPage.jsx | FR-1.9 | 데스크톱 |
+| AdminEventListPage.jsx | FR-1.8, FR-2.6(삭제) | 데스크톱 |
+| AdminEventFormPage.jsx | FR-1.7, FR-2.3(폼 필드 정의) | 데스크톱 |
+| AdminEntryListPage.jsx | FR-1.9, FR-2.4(동의 보유 내용 인라인 편집), FR-2.6(CSV 다운로드) | 데스크톱 |
 | mypage/MyEntriesPage.jsx | FR-2.1, FR-2.2 | 모바일+데스크톱(768px) |
 | mypage/MyProfilePage.jsx | FR-2.1 | 모바일+데스크톱(768px) |
-| admin/AdminConsentNotePage.jsx | FR-2.4 | 데스크톱 |
-</content>
-</invoke>

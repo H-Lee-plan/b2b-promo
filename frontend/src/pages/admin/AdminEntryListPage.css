@@ -7,12 +7,30 @@
 .admin-entry-list__header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-4);
   margin-bottom: var(--space-5);
+}
+
+.admin-entry-list__header h1 {
+  flex: 1;
 }
 
 .admin-entry-list__empty {
   text-align: center;
   color: var(--color-text-muted);
   padding: var(--space-8) 0;
+}
+
+.admin-entry-list__consent-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.admin-entry-list__consent-note input {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font: 400 var(--text-small, 0.875rem) var(--font-sans);
 }

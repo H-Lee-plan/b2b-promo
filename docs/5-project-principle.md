@@ -12,8 +12,9 @@
 | v1.7 | 2026-08-20 | 사용자 요청으로 P0/P1 우선순위 구분 제거(PRD v1.7과 정합) — 1절의 "참여 방식 2종(P0)"/"P1 폼 제출형 추가" 표현 정리, 6·7절 디렉토리 트리의 `# P0`/`[P1]` 태그 전부 제거(우선순위가 아니라 9-plan.md 체크박스로 구현 여부를 추적). 6·7절은 v1.6에 따라 여전히 최초 설계 의도의 기록이며, 실제 백엔드 구조의 최종 근거는 `backend/CLAUDE.md`다 |
 | v1.8 | 2026-08-20 | 사용자 요청으로 JWT 시크릿을 `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` 2개에서 `JWT_SECRET` 1개로 통합(**Access/Refresh가 같은 시크릿을 공유하도록 보안 설계 변경** — 하나가 유출되면 다른 토큰도 위조 가능해짐, 사용자가 트레이드오프를 인지하고 명시적으로 선택). 만료 시간을 하드코딩(`1h`/`14d`)에서 `JWT_ACCESS_EXPIRES_IN`/`JWT_REFRESH_EXPIRES_IN` 환경변수로 뺌(기본값은 기존과 동일하게 유지, PRD의 Refresh 14일 규칙 변경 없음). 필수 환경변수가 5개에서 4개로 줄어듦 |
 | v1.9 | 2026-08-20 | 백엔드 실구현 대비 정합성 감사 반영: (1) 이벤트 삭제(FR-2.6/BE-12) 도입으로 실제 에러 코드가 7개(`EVENT_HAS_ENTRIES` 추가)인데 "6개"로 남아있던 서술 전체 수정, (2) 연락처 형식 검증 언급이 실제로는 필수값 검증만 하는 코드와 달라 문구 수정, (3) PRD 참조 버전을 v1.6→v1.8로 갱신 |
+| v1.10 | 2026-08-20 | 프론트엔드 FE-1~FE-14 완료(실제 구현 완성)에 따른 정합성 감사 반영: 6절 프론트엔드 디렉토리 트리를 실제 최종 구조로 갱신(`statusLabels.js`/`toastStore.js`/`mypageApi.js`/`queryClient.js`/`Badge.jsx`/`ConfirmDialog.jsx`/`RequireAuth.jsx`/`RequireAdmin.jsx`/`styles/` 등 실제로 만들어진 파일 추가, 실제로는 만들지 않고 인라인 편집으로 대체한 `AdminConsentNotePage.jsx` 서술 정정). "아직 구현되지 않은 파일도 미리 정해둔 것" 문구를 "실제 구현 기준"으로 수정(더 이상 계획 단계가 아님). 부수적으로 다른 문서들에 남아있던 "도메인 정의서 v1.7" 참조를 실제 최신본 v1.8로 갱신(1·3·4·7·8절 관련 문서 목록) |
 
-- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md), [3-prd.md](./3-prd.md)(PRD v1.8), [4-user-scenario.md](./4-user-scenario.md)
+- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.8), [2-usecase.md](./2-usecase.md), [3-prd.md](./3-prd.md)(PRD v1.8), [4-user-scenario.md](./4-user-scenario.md)
 - **이 문서의 역할**: PRD 4절에서 이미 확정된 기술 스택(React 19 + Zustand + TanStack Query / Node.js + Express + `pg` / PostgreSQL 17 / 쿠키 없는 Access·Refresh JWT)을 그대로 전제하고, "그 스택으로 코드를 어떻게 배치할지"만 다룬다. 스택 재논의·신규 도구 도입 제안은 이 문서의 범위가 아니다.
 
 ## 1. 모든 스택에 공통인 최상위 원칙
@@ -83,31 +84,33 @@ PRD 7절 결정("테스트 자동화 스위트 없음, 룰렛 가중치 추첨�
 ```
 frontend/
   src/
-    main.jsx                     # 앱 진입점, silent refresh 부팅 처리
-    App.jsx                      # 라우팅 정의
+    main.jsx                     # 앱 진입점, bootstrapAuth(silent refresh) 완료 후 렌더링
+    App.jsx                      # 라우팅 정의(RequireAuth/RequireAdmin 가드 포함)
     constants/
       domain.js                  # Enum 상수(3절 표: targetType/participationType/status 등)
+      statusLabels.js            # Enum → 한글 라벨/뱃지 톤 매핑(EVENT_STATUS_LABEL 등)
     store/
       authStore.js               # zustand: accessToken/refreshToken/user, persist(localStorage)
+      toastStore.js               # zustand: 공통 Toast 상태(showError/showSuccess)
     api/
-      client.js                  # fetch 래퍼, 401 인터셉트 + refresh 재시도
+      client.js                  # fetch 래퍼, 401 인터셉트 + refresh 재시도(동시 요청 시 재발급 중복 방지)
       authApi.js                 # signup/login/logout/refresh
-      eventsApi.js               # 목록/상세/등록/수정/종료
-      entriesApi.js              # 참여신청/참여신청 목록
+      eventsApi.js               # 목록/상세/등록/수정/종료/삭제
+      entriesApi.js              # 참여신청 생성/목록/동의 보유 내용 작성/CSV 다운로드
+      mypageApi.js                # 본인 참여 내역/취소/프로필 조회·수정/비밀번호 변경
     pages/
       events/
         EventListPage.jsx
-        EventDetailPage.jsx      # 회원/비회원 참여 폼 분기
+        EventDetailPage.jsx      # 회원/비회원 참여 폼 분기, 폼 제출형은 FormFieldsInput 포함
         RouletteResultPage.jsx
       auth/
         LoginPage.jsx
         SignupPage.jsx
       admin/
         AdminLoginPage.jsx
-        AdminEventListPage.jsx   # 종료 버튼 포함, 삭제 버튼은 FR-2.6
-        AdminEventFormPage.jsx   # 등록/수정 공용, 룰렛 경품 입력 포함
-        AdminEntryListPage.jsx   # 엑셀 다운로드 버튼은 FR-2.6
-        AdminConsentNotePage.jsx # FR-2.4 신청 건별 동의 보유 내용 작성(UC15)
+        AdminEventListPage.jsx   # 종료·삭제 버튼 포함(삭제는 참여신청 0건일 때만 활성화, FR-2.6)
+        AdminEventFormPage.jsx   # 등록/수정 공용, 룰렛 경품·폼 필드 입력 포함
+        AdminEntryListPage.jsx   # 참여신청 건별 동의 보유 내용 인라인 편집(FR-2.4) + CSV 다운로드(FR-2.6)
       mypage/                    # FR-2.1/2.2
         MyEntriesPage.jsx        # 참여 내역/당첨 결과 조회 + 신청 취소(FR-2.2, 룰렛은 버튼 미노출)
         MyProfilePage.jsx        # 내 정보 조회/수정, 비밀번호 변경
@@ -115,12 +118,20 @@ frontend/
       Toast.jsx                  # 공통 에러 토스트 1개(에러 코드 7종 공용)
       ConsentCheckbox.jsx        # 동의 문구 + 보유기간 고지 (회원/비회원 공용)
       FormFieldsInput.jsx        # FR-2.3 폼 제출형 이벤트의 관리자 정의 필드 입력(EventDetailPage에서 참여방식이 폼 제출형일 때만 사용)
+      Badge.jsx                  # 이벤트/참여신청 상태 뱃지 공용
+      ConfirmDialog.jsx          # 되돌릴 수 없는 액션(종료/삭제) 확인 다이얼로그 공용
+      RequireAuth.jsx            # 로그인 필요 라우트 가드(mypage)
+      RequireAdmin.jsx           # 관리자 전용 라우트 가드(admin)
     lib/
-      format.js                  # 날짜/전화번호 표시 포맷 등 최소 유틸(필요해지면 추가)
+      format.js                  # 날짜/D-day 표시 포맷 등 최소 유틸
+      queryClient.js             # TanStack Query 클라이언트(전역 에러 → Toast 연동)
       exportCsv.js                # FR-2.6 참여자 명단 CSV 다운로드(AdminEntryListPage에서 사용)
+    styles/
+      tokens.css                 # 10-style.md 2·3·4·5·7절 색상/타이포/간격/모서리/모션 토큰
+      button.css                 # 공용 버튼 스타일
 ```
 
-- 아직 구현되지 않은 파일도 이름과 역할만 미리 정해둔 것이며, 실제 코드는 착수 시점에 만든다 — 어느 파일에 무엇이 들어갈지 미리 합의해 두면 착수 시 구조를 다시 고민하지 않아도 된다는 것이 목적이고, "지금 만들지 않는다"는 원칙(1절)은 그대로 유지된다. 구현 여부는 `docs/9-plan.md`의 Task 체크박스로 추적한다.
+- FE-1~FE-14가 전부 완료되어 위 구조는 계획이 아니라 실제 구현 기준이다. `AdminConsentNotePage.jsx`는 별도 파일로 만들지 않고 `AdminEntryListPage.jsx` 내 인라인 편집(`ConsentNoteCell`)으로 구현했다(9-plan.md FE-13 완료조건 참고 — 계획 단계에서 이미 "또는 인라인 편집"을 허용해 두었다).
 - `hooks/` 같은 범용 폴더는 두지 않는다. TanStack Query 훅은 각 `pages/*.jsx` 파일 상단에서 `api/*.js` 함수를 직접 `useQuery`/`useMutation`으로 감싸 쓴다(화면이 딱 8개뿐이라 재사용 훅 추출은 두 번째 사용처가 생길 때 판단).
 
 ## 7. 백엔드 디렉토리 구조

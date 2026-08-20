@@ -9,7 +9,7 @@ import { authApi } from '../../api/authApi.js';
 import { useAuthStore } from '../../store/authStore.js';
 
 vi.mock('../../api/eventsApi.js', () => ({
-  eventsApi: { list: vi.fn(), close: vi.fn() },
+  eventsApi: { list: vi.fn(), close: vi.fn(), remove: vi.fn() },
 }));
 vi.mock('../../api/entriesApi.js', () => ({
   entriesApi: { list: vi.fn() },
@@ -26,7 +26,7 @@ const EVENTS = [
 
 function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={['/admin/events']}>
         <Routes>
@@ -39,6 +39,7 @@ function renderPage() {
       </MemoryRouter>
     </QueryClientProvider>,
   );
+  return { ...view, queryClient };
 }
 
 describe('AdminEventListPage', () => {
@@ -104,6 +105,64 @@ describe('AdminEventListPage', () => {
     await screen.findByText('여름맞이 룰렛대전');
     fireEvent.click(screen.getByRole('button', { name: '+ 이벤트 등록' }));
     expect(await screen.findByText('이벤트 등록 화면')).toBeInTheDocument();
+  });
+
+  it('참여신청이 있는 이벤트는 삭제 버튼이 비활성화된다', async () => {
+    entriesApi.list.mockImplementation((eventId) =>
+      Promise.resolve(eventId === 'e1' ? [{ id: 'entry1' }] : []),
+    );
+    renderPage();
+    await screen.findByText('여름맞이 룰렛대전');
+
+    const rows = screen.getAllByRole('row');
+    const ongoingRow = rows.find((row) => within(row).queryByText('여름맞이 룰렛대전'));
+    const scheduledRow = rows.find((row) => within(row).queryByText('신규 거래처 감사'));
+
+    await waitFor(() => expect(within(ongoingRow).getByRole('button', { name: '삭제' })).toBeDisabled());
+    await waitFor(() => expect(within(scheduledRow).getByRole('button', { name: '삭제' })).not.toBeDisabled());
+  });
+
+  it('참여신청이 없는 이벤트를 삭제하면 확인 후 목록에서 사라진다', async () => {
+    let currentEvents = [...EVENTS];
+    eventsApi.list.mockImplementation(() => Promise.resolve(currentEvents));
+    entriesApi.list.mockResolvedValue([]);
+    eventsApi.remove.mockImplementation((eventId) => {
+      currentEvents = currentEvents.filter((event) => event.id !== eventId);
+      return Promise.resolve(null);
+    });
+
+    const { queryClient } = renderPage();
+    await screen.findByText('신규 거래처 감사');
+
+    const rows = screen.getAllByRole('row');
+    const scheduledRow = rows.find((row) => within(row).queryByText('신규 거래처 감사'));
+    await waitFor(() => expect(within(scheduledRow).getByRole('button', { name: '삭제' })).not.toBeDisabled());
+    fireEvent.click(within(scheduledRow).getByRole('button', { name: '삭제' }));
+
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: '삭제' }));
+
+    await waitFor(() => expect(eventsApi.remove).toHaveBeenCalledWith('e2'));
+    await waitFor(() => expect(screen.queryByText('신규 거래처 감사')).not.toBeInTheDocument());
+
+    // 삭제된 이벤트의 하위 쿼리(참여자수 등)가 캐시에 남아 재조회→404 에러 토스트로 이어지지 않도록 완전히 제거되어야 한다
+    expect(queryClient.getQueryData(['events', 'e2', 'entries'])).toBeUndefined();
+  });
+
+  it('삭제 확인 다이얼로그에서 취소를 누르면 삭제하지 않는다', async () => {
+    entriesApi.list.mockResolvedValue([]);
+    renderPage();
+    await screen.findByText('신규 거래처 감사');
+
+    const rows = screen.getAllByRole('row');
+    const scheduledRow = rows.find((row) => within(row).queryByText('신규 거래처 감사'));
+    await waitFor(() => expect(within(scheduledRow).getByRole('button', { name: '삭제' })).not.toBeDisabled());
+    fireEvent.click(within(scheduledRow).getByRole('button', { name: '삭제' }));
+
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: '취소' }));
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(eventsApi.remove).not.toHaveBeenCalled();
   });
 
   it('로그아웃 클릭 시 인증 정보를 비우고 관리자 로그인 화면으로 이동한다', async () => {

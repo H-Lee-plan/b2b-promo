@@ -5,6 +5,7 @@ import RouletteResultPage from './pages/events/RouletteResultPage.jsx';
 import LoginPage from './pages/auth/LoginPage.jsx';
 import SignupPage from './pages/auth/SignupPage.jsx';
 import MyEntriesPage from './pages/mypage/MyEntriesPage.jsx';
+import MyProfilePage from './pages/mypage/MyProfilePage.jsx';
 import AdminLoginPage from './pages/admin/AdminLoginPage.jsx';
 import AdminEventListPage from './pages/admin/AdminEventListPage.jsx';
 import AdminEventFormPage from './pages/admin/AdminEventFormPage.jsx';
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route element={<RequireAuth />}>
           <Route path="/mypage" element={<MyEntriesPage />} />
+          <Route path="/mypage/profile" element={<MyProfilePage />} />
         </Route>
 
         {/* 관리자 경로 */}

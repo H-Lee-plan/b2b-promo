@@ -11,12 +11,42 @@ import ConfirmDialog from '../../components/ConfirmDialog.jsx';
 import '../../styles/button.css';
 import './AdminEventListPage.css';
 
-function ParticipantCount({ eventId }) {
-  const { data } = useQuery({
-    queryKey: ['events', eventId, 'entries'],
-    queryFn: () => entriesApi.list(eventId),
+function EventRow({ event, onRowClick, onEdit, onRequestClose, onRequestDelete }) {
+  const entriesQuery = useQuery({
+    queryKey: ['events', event.id, 'entries'],
+    queryFn: () => entriesApi.list(event.id),
   });
-  return data ? data.length : '-';
+  const entryCount = entriesQuery.data?.length;
+  const canDelete = entryCount === 0;
+
+  return (
+    <tr onClick={() => onRowClick(event.id)}>
+      <td>{event.title}</td>
+      <td>
+        <Badge tone={EVENT_STATUS_TONE[event.status]}>{EVENT_STATUS_LABEL[event.status]}</Badge>
+      </td>
+      <td>{entryCount ?? '-'}</td>
+      <td>{event.isPinned ? '★' : ''}</td>
+      <td onClick={(clickEvent) => clickEvent.stopPropagation()}>
+        <button type="button" onClick={() => onEdit(event.id)}>
+          수정
+        </button>
+        {event.status !== 'CLOSED' && (
+          <button type="button" className="button button--danger" onClick={() => onRequestClose(event)}>
+            종료
+          </button>
+        )}
+        <button
+          type="button"
+          className="button button--danger"
+          onClick={() => onRequestDelete(event)}
+          disabled={!canDelete}
+        >
+          삭제
+        </button>
+      </td>
+    </tr>
+  );
 }
 
 export default function AdminEventListPage() {
@@ -25,6 +55,7 @@ export default function AdminEventListPage() {
   const refreshToken = useAuthStore((state) => state.refreshToken);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const [closingEvent, setClosingEvent] = useState(null);
+  const [deletingEvent, setDeletingEvent] = useState(null);
 
   const eventsQuery = useQuery({ queryKey: ['events'], queryFn: eventsApi.list });
 
@@ -33,6 +64,17 @@ export default function AdminEventListPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       setClosingEvent(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (eventId) => eventsApi.remove(eventId),
+    onSuccess: (_, eventId) => {
+      // invalidateQueries(['events'])는 부분 일치로 ['events', eventId, 'entries']까지 다시 조회를
+      // 트리거해 삭제 직후 404 에러 토스트가 뜬다. 목록 캐시를 직접 갱신해 재조회 자체를 없앤다.
+      queryClient.setQueryData(['events'], (events) => events?.filter((event) => event.id !== eventId));
+      queryClient.removeQueries({ queryKey: ['events', eventId] });
+      setDeletingEvent(null);
     },
   });
 
@@ -72,30 +114,14 @@ export default function AdminEventListPage() {
         </thead>
         <tbody>
           {events.map((event) => (
-            <tr key={event.id} onClick={() => navigate(`/admin/events/${event.id}/entries`)}>
-              <td>{event.title}</td>
-              <td>
-                <Badge tone={EVENT_STATUS_TONE[event.status]}>{EVENT_STATUS_LABEL[event.status]}</Badge>
-              </td>
-              <td>
-                <ParticipantCount eventId={event.id} />
-              </td>
-              <td>{event.isPinned ? '★' : ''}</td>
-              <td onClick={(clickEvent) => clickEvent.stopPropagation()}>
-                <button type="button" onClick={() => navigate(`/admin/events/${event.id}/edit`)}>
-                  수정
-                </button>
-                {event.status !== 'CLOSED' && (
-                  <button
-                    type="button"
-                    className="button button--danger"
-                    onClick={() => setClosingEvent(event)}
-                  >
-                    종료
-                  </button>
-                )}
-              </td>
-            </tr>
+            <EventRow
+              key={event.id}
+              event={event}
+              onRowClick={(eventId) => navigate(`/admin/events/${eventId}/entries`)}
+              onEdit={(eventId) => navigate(`/admin/events/${eventId}/edit`)}
+              onRequestClose={setClosingEvent}
+              onRequestDelete={setDeletingEvent}
+            />
           ))}
         </tbody>
       </table>
@@ -107,6 +133,15 @@ export default function AdminEventListPage() {
         confirmLabel="종료"
         onCancel={() => setClosingEvent(null)}
         onConfirm={() => closeMutation.mutate(closingEvent.id)}
+      />
+
+      <ConfirmDialog
+        open={Boolean(deletingEvent)}
+        title={`"${deletingEvent?.title ?? ''}" 이벤트를 삭제할까요?`}
+        message="삭제 후에는 되돌릴 수 없습니다."
+        confirmLabel="삭제"
+        onCancel={() => setDeletingEvent(null)}
+        onConfirm={() => deleteMutation.mutate(deletingEvent.id)}
       />
     </div>
   );

@@ -9,6 +9,7 @@
 | v1.3 | 2026-08-14 | docs 정합성 재검토: PRD 참조 버전을 실제 최신본(v1.6)으로 갱신 |
 | v1.4 | 2026-08-20 | 사용자 요청으로 P0/P1 우선순위 구분 제거(PRD v1.7과 정합) — 3·4번 다이어그램의 `[P1]` 노드 라벨 및 본문의 P0/[P1] 언급 정리 |
 | v1.5 | 2026-08-20 | 백엔드 실구현 대비 정합성 감사 반영: 에러 코드가 실제로는 7종(`EVENT_HAS_ENTRIES` 포함)인데 "6종"으로 남아있던 Toast 노드 라벨 수정, PRD 참조 버전을 v1.6→v1.8로 갱신 |
+| v1.6 | 2026-08-20 | 프론트엔드 FE-1~FE-14 완료에 따른 정합성 감사 반영: 별도 화면으로 계획됐던 `AdminConsentNotePage` 노드가 실제로는 `AdminEntryListPage` 내 인라인 편집으로 구현되어 다이어그램에서 제거하고 해당 사실을 `AdminEntryListPage` 노드 라벨에 반영 |
 
 - 관련 문서: [3-prd.md](./3-prd.md)(PRD v1.8 4절 기술 스택/아키텍처 개요, 6절 일정), [5-project-principle.md](./5-project-principle.md)(프로젝트 구조 설계 원칙)
 - **이 문서의 역할**: 기술 스택을 새로 정하거나 재논의하지 않는다. PRD 4절·5절 문서에서 이미 확정된 스택(단일 VM + Caddy + Express + PostgreSQL, React 19 SPA, 레이어 3개 고정)을 그대로 전제하고, "이미 정해진 것들이 어떻게 배치·연결되는지"만 Mermaid로 시각화한다. 1인 개발/3일 일정, 오버엔지니어링 금지 원칙에 따라 실제로 쓰지 않는 컴포넌트(큐, 캐시, 마이크로서비스 등)는 그리지 않는다.
@@ -85,8 +86,7 @@ flowchart TD
             AdminLoginPage
             AdminEventListPage
             AdminEventFormPage
-            AdminEntryListPage
-            AdminConsentNotePage
+            AdminEntryListPage["AdminEntryListPage<br/>(동의 보유 내용 인라인 편집 포함)"]
         end
         subgraph pMypage["pages/mypage"]
             MyEntriesPage

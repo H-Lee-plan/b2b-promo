@@ -1,13 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AdminEntryListPage from './AdminEntryListPage.jsx';
 import { entriesApi } from '../../api/entriesApi.js';
 import { eventsApi } from '../../api/eventsApi.js';
+import { downloadBlob } from '../../lib/exportCsv.js';
 
-vi.mock('../../api/entriesApi.js', () => ({ entriesApi: { list: vi.fn() } }));
+vi.mock('../../api/entriesApi.js', () => ({
+  entriesApi: { list: vi.fn(), updateConsentNote: vi.fn(), exportCsv: vi.fn() },
+}));
 vi.mock('../../api/eventsApi.js', () => ({ eventsApi: { get: vi.fn() } }));
+vi.mock('../../lib/exportCsv.js', () => ({ downloadBlob: vi.fn() }));
 
 function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -72,6 +76,26 @@ describe('AdminEntryListPage', () => {
     expect(guestRow).toHaveTextContent('미당첨');
   });
 
+  it('폼 제출형 참여신청의 제출 내용(formData)이 표시된다(FE-12)', async () => {
+    entriesApi.list.mockResolvedValue([
+      {
+        id: 'entry3',
+        user: { companyName: 'OO식자재', name: '박담당', email: 'park@corp.co.kr' },
+        guestEmail: null,
+        guestInfo: null,
+        consentedAt: '2026-08-13T10:07:00.000Z',
+        formData: { 회사명: 'OO식자재', 요청사항: '빠른 배송 부탁드려요' },
+        prize: null,
+        status: 'APPLIED',
+      },
+    ]);
+
+    renderPage();
+    const row = (await screen.findAllByRole('row')).find((r) => r.textContent.includes('박담당'));
+    expect(row).toHaveTextContent('회사명: OO식자재');
+    expect(row).toHaveTextContent('요청사항: 빠른 배송 부탁드려요');
+  });
+
   it('참여신청 0건이면 에러 대신 빈 상태 문구를 보여준다', async () => {
     entriesApi.list.mockResolvedValue([]);
     renderPage();
@@ -79,11 +103,90 @@ describe('AdminEntryListPage', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
-  it('엑셀 다운로드 버튼을 만들지 않았다(FE-14 후행)', async () => {
+  it('CSV 다운로드 버튼 클릭 시 파일이 내려받아진다', async () => {
     entriesApi.list.mockResolvedValue([]);
+    const csvBlob = new Blob(['col1,col2'], { type: 'text/csv' });
+    entriesApi.exportCsv.mockResolvedValue(csvBlob);
     renderPage();
     await screen.findByText('참여신청이 없습니다');
-    expect(screen.queryByRole('button', { name: /다운로드|엑셀|CSV/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'CSV 다운로드' }));
+
+    await waitFor(() => expect(entriesApi.exportCsv).toHaveBeenCalledWith('e1'));
+    await waitFor(() => expect(downloadBlob).toHaveBeenCalledWith(csvBlob, 'entries-e1.csv'));
+  });
+
+  it('관리자가 참여신청 건에 동의 보유 내용 메모를 작성·수정할 수 있다', async () => {
+    entriesApi.list.mockResolvedValue([
+      {
+        id: 'entry1',
+        user: { companyName: 'OO식자재', name: '김담당', email: 'kim@corp.co.kr' },
+        guestEmail: null,
+        guestInfo: null,
+        consentedAt: '2026-08-13T10:02:00.000Z',
+        consentNote: null,
+        prize: null,
+        status: 'APPLIED',
+      },
+    ]);
+    entriesApi.updateConsentNote.mockResolvedValue({ id: 'entry1', consentNote: '전화로 재확인함' });
+
+    renderPage();
+    await screen.findByText('김담당');
+
+    fireEvent.click(screen.getByRole('button', { name: '편집' }));
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '전화로 재확인함' } });
+    fireEvent.click(screen.getByRole('button', { name: '저장' }));
+
+    await waitFor(() =>
+      expect(entriesApi.updateConsentNote).toHaveBeenCalledWith('e1', 'entry1', {
+        consentNote: '전화로 재확인함',
+      }),
+    );
+  });
+
+  it('메모 편집 중 취소를 누르면 저장하지 않고 편집 모드를 벗어난다', async () => {
+    entriesApi.list.mockResolvedValue([
+      {
+        id: 'entry1',
+        user: { companyName: 'OO식자재', name: '김담당', email: 'kim@corp.co.kr' },
+        guestEmail: null,
+        guestInfo: null,
+        consentedAt: '2026-08-13T10:02:00.000Z',
+        consentNote: '기존 메모',
+        prize: null,
+        status: 'APPLIED',
+      },
+    ]);
+
+    renderPage();
+    await screen.findByText('기존 메모');
+
+    fireEvent.click(screen.getByRole('button', { name: '편집' }));
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '수정 중인 메모' } });
+    fireEvent.click(screen.getByRole('button', { name: '취소' }));
+
+    expect(screen.getByText('기존 메모')).toBeInTheDocument();
+    expect(entriesApi.updateConsentNote).not.toHaveBeenCalled();
+  });
+
+  it('저장된 메모는 다시 조회(새로고침)해도 유지된다', async () => {
+    entriesApi.list.mockResolvedValue([
+      {
+        id: 'entry1',
+        user: { companyName: 'OO식자재', name: '김담당', email: 'kim@corp.co.kr' },
+        guestEmail: null,
+        guestInfo: null,
+        consentedAt: '2026-08-13T10:02:00.000Z',
+        consentNote: '기존 메모',
+        prize: null,
+        status: 'APPLIED',
+      },
+    ]);
+
+    renderPage();
+    expect(await screen.findByText('기존 메모')).toBeInTheDocument();
+    expect(screen.getByText('동의 보유 내용')).toBeInTheDocument();
   });
 
   it('← 이벤트 목록 클릭 시 이벤트 목록 화면으로 이동한다', async () => {

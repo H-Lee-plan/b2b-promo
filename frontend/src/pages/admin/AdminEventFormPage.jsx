@@ -7,7 +7,7 @@ import { TARGET_TYPE_LABEL, PARTICIPATION_TYPE_LABEL } from '../../constants/sta
 import '../../styles/button.css';
 import './AdminEventFormPage.css';
 
-const FORM_PARTICIPATION_TYPES = [PARTICIPATION_TYPE.SIMPLE, PARTICIPATION_TYPE.ROULETTE];
+const FORM_PARTICIPATION_TYPES = [PARTICIPATION_TYPE.SIMPLE, PARTICIPATION_TYPE.FORM, PARTICIPATION_TYPE.ROULETTE];
 
 function toDatetimeLocal(isoString) {
   if (!isoString) return '';
@@ -49,6 +49,8 @@ export default function AdminEventFormPage() {
   });
   const [prizes, setPrizes] = useState([]);
   const [prizeErrors, setPrizeErrors] = useState({});
+  const [formFields, setFormFields] = useState(['']);
+  const [formFieldError, setFormFieldError] = useState(null);
 
   useEffect(() => {
     const event = eventQuery.data;
@@ -63,10 +65,12 @@ export default function AdminEventFormPage() {
       isPinned: event.isPinned,
     });
     setPrizes(event.prizes?.length ? event.prizes.map(({ name, weight }) => ({ name, weight })) : []);
+    setFormFields(event.formFields?.length ? event.formFields : ['']);
   }, [eventQuery.data]);
 
   const isOngoing = eventQuery.data?.status === EVENT_STATUS.ONGOING;
   const isRoulette = form.participationType === PARTICIPATION_TYPE.ROULETTE;
+  const isForm = form.participationType === PARTICIPATION_TYPE.FORM;
 
   const saveMutation = useMutation({
     mutationFn: (payload) => (isEdit ? eventsApi.update(eventId, payload) : eventsApi.create(payload)),
@@ -100,6 +104,18 @@ export default function AdminEventFormPage() {
     });
   }
 
+  function updateFormField(index, value) {
+    setFormFields((prev) => prev.map((field, i) => (i === index ? value : field)));
+  }
+
+  function addFormField() {
+    setFormFields((prev) => [...prev, '']);
+  }
+
+  function removeFormField(index) {
+    setFormFields((prev) => prev.filter((_, i) => i !== index));
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
 
@@ -111,6 +127,12 @@ export default function AdminEventFormPage() {
       });
       setPrizeErrors(errors);
       if (Object.keys(errors).length > 0) return;
+    }
+
+    if (isForm) {
+      const hasEmptyField = formFields.length === 0 || formFields.some((field) => !field.trim());
+      setFormFieldError(hasEmptyField ? '필드명을 모두 입력해주세요.' : null);
+      if (hasEmptyField) return;
     }
 
     const payload = {
@@ -125,6 +147,10 @@ export default function AdminEventFormPage() {
 
     if (isRoulette) {
       payload.prizes = prizes.map((prize) => ({ name: prize.name, weight: Number(prize.weight) }));
+    }
+
+    if (isForm) {
+      payload.formFields = formFields.map((field) => field.trim());
     }
 
     saveMutation.mutate(payload);
@@ -230,6 +256,29 @@ export default function AdminEventFormPage() {
           ))}
           <button type="button" onClick={addPrize}>
             + 경품 추가
+          </button>
+        </fieldset>
+      )}
+
+      {isForm && (
+        <fieldset className="admin-event-form__fields" disabled={isOngoing}>
+          <legend>참여 폼 필드 (1건 이상 등록)</legend>
+          {formFields.map((field, index) => (
+            <div className="admin-event-form__field-row" key={index}>
+              <input
+                placeholder="필드명 (예: 요청사항)"
+                value={field}
+                onChange={(event) => updateFormField(index, event.target.value)}
+                required
+              />
+              <button type="button" onClick={() => removeFormField(index)}>
+                삭제
+              </button>
+            </div>
+          ))}
+          {formFieldError && <p className="field-error">{formFieldError}</p>}
+          <button type="button" onClick={addFormField}>
+            + 필드 추가
           </button>
         </fieldset>
       )}

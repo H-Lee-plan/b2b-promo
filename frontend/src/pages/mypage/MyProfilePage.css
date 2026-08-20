@@ -1,0 +1,35 @@
+.my-profile {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.my-profile form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.my-profile label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-small, 0.875rem);
+}
+
+.my-profile input {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font: 400 var(--text-body, 1rem) var(--font-sans);
+}
+
+.field-error {
+  color: var(--color-danger-500);
+  font-size: var(--text-small, 0.875rem);
+  margin: 0;
+}

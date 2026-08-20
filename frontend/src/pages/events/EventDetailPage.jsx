@@ -8,6 +8,7 @@ import { EVENT_STATUS_LABEL, EVENT_STATUS_TONE } from '../../constants/statusLab
 import { EVENT_STATUS, PARTICIPATION_TYPE, TARGET_TYPE } from '../../constants/domain.js';
 import Badge from '../../components/Badge.jsx';
 import ConsentCheckbox from '../../components/ConsentCheckbox.jsx';
+import FormFieldsInput from '../../components/FormFieldsInput.jsx';
 import { formatDateTime } from '../../lib/format.js';
 import '../../styles/button.css';
 import './EventDetailPage.css';
@@ -30,6 +31,7 @@ export default function EventDetailPage() {
 
   const [consent, setConsent] = useState(false);
   const [guestForm, setGuestForm] = useState({ companyName: '', name: '', email: '', phone: '' });
+  const [formData, setFormData] = useState({});
   const [submitted, setSubmitted] = useState(false);
 
   const entryMutation = useMutation({
@@ -46,9 +48,16 @@ export default function EventDetailPage() {
 
   if (!event) return null;
 
+  const isFormType = event.participationType === PARTICIPATION_TYPE.FORM;
+  const formFieldsComplete = !isFormType || event.formFields.every((field) => Boolean(formData[field]));
+
+  function updateFormDataField(field, value) {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  }
+
   function handleMemberSubmit(submitEvent) {
     submitEvent.preventDefault();
-    entryMutation.mutate({ consent: true });
+    entryMutation.mutate({ consent: true, ...(isFormType && { formData }) });
   }
 
   function handleGuestSubmit(submitEvent) {
@@ -58,6 +67,7 @@ export default function EventDetailPage() {
       guestEmail: guestForm.email,
       guestPhone: guestForm.phone,
       guestInfo: { companyName: guestForm.companyName, name: guestForm.name, phone: guestForm.phone },
+      ...(isFormType && { formData }),
     });
   }
 
@@ -124,8 +134,13 @@ export default function EventDetailPage() {
             <p>
               로그인 회원: {user.name} ({user.companyName})
             </p>
+            {isFormType && <FormFieldsInput fields={event.formFields} values={formData} onChange={updateFormDataField} />}
             <ConsentCheckbox variant="member" checked={consent} onChange={setConsent} />
-            <button type="submit" className="button button--primary" disabled={!consent || entryMutation.isPending}>
+            <button
+              type="submit"
+              className="button button--primary"
+              disabled={!consent || !formFieldsComplete || entryMutation.isPending}
+            >
               참여하기
             </button>
           </form>
@@ -158,11 +173,12 @@ export default function EventDetailPage() {
               연락처
               <input value={guestForm.phone} onChange={(event) => updateGuestField('phone', event.target.value)} required />
             </label>
+            {isFormType && <FormFieldsInput fields={event.formFields} values={formData} onChange={updateFormDataField} />}
             <ConsentCheckbox variant="guest" checked={consent} onChange={setConsent} />
             <button
               type="submit"
               className="button button--primary"
-              disabled={!consent || !guestFormComplete || entryMutation.isPending}
+              disabled={!consent || !guestFormComplete || !formFieldsComplete || entryMutation.isPending}
             >
               참여하기
             </button>

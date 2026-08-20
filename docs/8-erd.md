@@ -7,7 +7,7 @@
 | v1.1 | 2026-08-20 | 사용자 요청으로 P0/P1 우선순위 구분 제거(PRD v1.7과 정합) — `consent_note` 설명의 "P1" 표기 삭제 |
 | v1.2 | 2026-08-20 | 백엔드 실구현 대비 정합성 감사 반영: (1) 실제 스키마에 존재하는 `events.form_fields` 컬럼이 누락되어 있어 추가, (2) `users.phone` 형식 서술이 실제로는 필수값만 검증하는 코드와 달라 문구 수정, (3) PRD 참조 버전을 v1.6→v1.8로 갱신 |
 
-- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7) 4~5절, [3-prd.md](./3-prd.md)(PRD v1.8) 4·8절, [5-project-principle.md](./5-project-principle.md) 7절
+- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.8) 4~5절, [3-prd.md](./3-prd.md)(PRD v1.8) 4·8절, [5-project-principle.md](./5-project-principle.md) 7절
 - **이 문서의 역할**: 새로운 스키마를 설계하지 않는다. 도메인 정의서 4절(엔티티) · 5절(관계)과 PRD 4절(테이블 5개, `schema.sql` 1파일, ORM 없음)에서 이미 확정된 구조를 Mermaid ERD로 시각화만 한다. 컬럼명은 프로젝트 원칙(5-project-principle.md 3절)에 따라 DB는 snake_case, 매핑은 애플리케이션 레이어(`rowMapper.js`)에서 처리한다.
 
 ## ERD

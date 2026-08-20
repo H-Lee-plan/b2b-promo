@@ -174,6 +174,52 @@ describe('EventDetailPage', () => {
     expect(screen.queryByText('룰렛 결과 화면')).not.toBeInTheDocument();
   });
 
+  it('폼 제출형 이벤트는 정의된 필드 입력칸을 보여주고, 채우지 않으면 제출이 막힌다', async () => {
+    useAuthStore.getState().setAuth({ accessToken: 'a', refreshToken: 'r', user: { name: '김', companyName: 'C' } });
+    renderPage({ participationType: 'FORM', formFields: ['회사명', '요청사항'] });
+
+    expect(await screen.findByLabelText('회사명')).toBeInTheDocument();
+    expect(screen.getByLabelText('요청사항')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(screen.getByRole('button', { name: '참여하기' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('회사명'), { target: { value: 'OO식자재' } });
+    expect(screen.getByRole('button', { name: '참여하기' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('요청사항'), { target: { value: '빠른 배송 부탁드립니다' } });
+    expect(screen.getByRole('button', { name: '참여하기' })).not.toBeDisabled();
+  });
+
+  it('폼 제출형 참여 제출 시 formData가 함께 전송된다(회원)', async () => {
+    entriesApi.create.mockResolvedValue({ status: 'APPLIED' });
+    useAuthStore.getState().setAuth({ accessToken: 'a', refreshToken: 'r', user: { name: '김', companyName: 'C' } });
+    renderPage({ participationType: 'FORM', formFields: ['요청사항'] });
+
+    fireEvent.change(await screen.findByLabelText('요청사항'), { target: { value: '빠른 배송 부탁드립니다' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: '참여하기' }));
+
+    await waitFor(() =>
+      expect(entriesApi.create).toHaveBeenCalledWith('e1', {
+        consent: true,
+        formData: { 요청사항: '빠른 배송 부탁드립니다' },
+      }),
+    );
+  });
+
+  it('단순 참여/룰렛 게임형 이벤트 상세에는 FormFieldsInput이 나타나지 않는다', async () => {
+    useAuthStore.getState().setAuth({ accessToken: 'a', refreshToken: 'r', user: { name: '김', companyName: 'C' } });
+    const { unmount } = renderPage({ participationType: 'SIMPLE' });
+    await screen.findByRole('button', { name: '참여하기' });
+    expect(screen.queryByLabelText('요청사항')).not.toBeInTheDocument();
+    unmount();
+
+    renderPage({ participationType: 'ROULETTE' });
+    await screen.findByRole('button', { name: '참여하기' });
+    expect(screen.queryByLabelText('요청사항')).not.toBeInTheDocument();
+  });
+
   it('중복 참여 시 Toast로 "이미 참여하셨습니다" 메시지가 표시된다(S-4)', async () => {
     entriesApi.create.mockRejectedValue(
       Object.assign(new Error('이미 참여하셨습니다.'), { code: 'DUPLICATE_ENTRY', status: 409 }),

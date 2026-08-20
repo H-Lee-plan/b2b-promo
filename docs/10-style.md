@@ -6,6 +6,7 @@
 | v1.0 | 2026-08-20 | 최초 작성. `emilkowalski/skills`의 `apple-design`·`emil-design-eng` 스킬(및 `pick-ui-library`)을 근거로 색상·타이포그래피·간격·컴포넌트·모션 규칙을 확정 |
 | v1.1 | 2026-08-20 | 8절 "참여자용 9개 화면" 오기 수정 — 실제로 나열된 화면 수(7개: 로그인/회원가입/목록/상세/룰렛결과+마이페이지 2개)와 맞지 않던 것을 바로잡음(10절 화면 매핑표 전체 화면 수 9와 착오) |
 | v1.2 | 2026-08-20 | 백엔드 실구현 대비 정합성 감사 반영: 에러 코드가 실제로는 7종(`EVENT_HAS_ENTRIES` 포함)인데 "6개/6종"으로 남아있던 Toast 절 서술 수정 |
+| v1.3 | 2026-08-20 | 프론트엔드 FE-1~FE-14 완료에 따른 정합성 감사 반영: (1) 11절이 언급한 `frontend/src/styles/global.css`가 실제로는 만들어지지 않았고 `tokens.css`+`button.css` 구조로 구현된 사실을 반영, (2) 10절 화면 매핑표에서 별도 화면으로 만들지 않은 `AdminConsentNotePage`를 `AdminEntryListPage` 인라인 편집 행으로 교체 |
 
 - 관련 문서: [3-prd.md](./3-prd.md)(PRD, 기술스택·화면 목록), [5-project-principle.md](./5-project-principle.md)(코드 구조 원칙), [7-wireframe.md](./7-wireframe.md)(화면별 와이어프레임)
 - **이 문서의 역할**: FE Task(FE-1~FE-14) 착수 시 화면을 실제로 그릴 때 참조하는 시각·모션 규칙을 정한다. 와이어프레임(7절)이 "어디에 무엇이 있는지"를 정했다면, 이 문서는 "그것이 어떻게 보이고 어떻게 반응하는지"를 정한다. 새로운 기능이나 화면을 추가하지 않으며, 충돌 시 도메인 정의서 → PRD → 프로젝트 구조 원칙이 우선한다.
@@ -278,14 +279,15 @@ body { font: 400 1rem/1.6 var(--font-sans); }
 | RouletteResultPage | 7절 룰렛 연출(유일한 예외 애니메이션) |
 | LoginPage / SignupPage | 6절 입력 필드 |
 | AdminLoginPage / AdminEventListPage / AdminEventFormPage / AdminEntryListPage | 8절(고정 데스크톱 폭), 6절 테이블·확인 다이얼로그 |
-| MyEntriesPage / MyProfilePage / AdminConsentNotePage | 2·6절 상태 배지·입력 필드 그대로 재사용(신규 패턴 추가 없음) |
+| MyEntriesPage / MyProfilePage | 2·6절 상태 배지·입력 필드 그대로 재사용(신규 패턴 추가 없음) |
+| AdminEntryListPage 내 동의 보유 내용 인라인 편집 | 6절 입력 필드·버튼 그대로 재사용(별도 화면으로 만들지 않음) |
 
 ---
 
 ## 11. 구현 방식
 
-- 새 UI 라이브러리·CSS 프레임워크(Tailwind, styled-components 등)는 도입하지 않는다. 위 토큰을 `frontend/src/styles/tokens.css` 1개 파일에 CSS 커스텀 프로퍼티로 선언하고, `frontend/src/styles/global.css`에서 기본 리셋과 함께 불러와 `main.jsx`에서 한 번만 import한다(FE-1 범위).
-- 컴포넌트별 스타일은 각 `.jsx` 옆에 동일 이름의 `.css`를 두는 일반 CSS 방식으로 충분하다 — 화면 수가 12개뿐이라 CSS Modules/CSS-in-JS 도입 비용이 이득보다 크다. 두 번째로 재사용되는 스타일이 실제로 생기면 그때 공용 클래스로 옮긴다(프로젝트 원칙 1절과 동일한 판단 기준).
+- 새 UI 라이브러리·CSS 프레임워크(Tailwind, styled-components 등)는 도입하지 않는다. 위 토큰과 기본 리셋을 `frontend/src/styles/tokens.css` 1개 파일에 CSS 커스텀 프로퍼티로 선언하고 `main.jsx`에서 한 번만 import한다. 버튼처럼 여러 화면에서 재사용되는 공용 클래스는 `frontend/src/styles/button.css`로 분리해 사용하는 페이지에서 각자 import한다(실제 구현 결과 — 별도의 `global.css`는 만들지 않음).
+- 컴포넌트별 스타일은 각 `.jsx` 옆에 동일 이름의 `.css`를 두는 일반 CSS 방식으로 충분하다 — 화면 수가 12개뿐이라 CSS Modules/CSS-in-JS 도입 비용이 이득보다 크다. 두 번째로 재사용되는 스타일이 실제로 생기면 그때 공용 클래스로 옮긴다(프로젝트 원칙 1절과 동일한 판단 기준. 실제로 버튼 스타일이 이 기준에 해당해 `styles/button.css`로 분리됨).
 - 아이콘은 라이브러리를 새로 넣지 않고 필요한 만큼만 인라인 SVG로 직접 넣는다(화면당 1~2개 수준 — 뒤로가기, 닫기, 체크 정도).
 
 ---

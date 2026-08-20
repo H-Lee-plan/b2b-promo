@@ -61,6 +61,12 @@ describe('RouletteResultPage', () => {
     expect(screen.getByText(/결과를 표시할 수 없습니다/)).toBeInTheDocument();
   });
 
+  it('entry에 관리자 동의 보유 내용(consentNote)이 포함되어 있어도 참여자 화면에는 노출하지 않는다(FE-13)', async () => {
+    renderWithEntry({ status: 'WON', prize: { name: '상품권' }, consentNote: '전화로 재확인함' });
+    await screen.findByText('축하합니다! "상품권" 당첨', {}, { timeout: 2000 });
+    expect(screen.queryByText('전화로 재확인함')).not.toBeInTheDocument();
+  });
+
   it('prefers-reduced-motion이 설정되면 스피너 애니메이션 없이 즉시 결과를 표시한다', async () => {
     vi.spyOn(window, 'matchMedia').mockReturnValue({
       matches: true,

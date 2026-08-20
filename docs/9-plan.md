@@ -18,6 +18,8 @@
 | v1.14 | 2026-08-20 | FE-7/FE-8 완료 반영: 완료조건 각 8개/6개 체크(`EventListPage`/`EventDetailPage`(3분기)/`ConsentCheckbox`/`RouletteResultPage`). 정렬은 백엔드가 이미 보장하므로 프론트는 응답 순서를 그대로 렌더링. 단순 참여형은 FR-1.10 대상이 아니므로 결과 화면 대신 상세 페이지 내 인라인 완료 문구로 처리(도메인상 룰렛 결과 화면과 별개 화면, 별도 Task 없음). 실제 브라우저 E2E로 비회원 룰렛 참여 → 당첨 결과 → 동일 이메일 재참여 시 `DUPLICATE_ENTRY` Toast까지 확인, 테스트 데이터는 확인 후 삭제 |
 | v1.15 | 2026-08-20 | FE-9 완료 반영: 완료조건 5개 체크. `api/client.js`에 401 인터셉터(모듈 스코프 `refreshPromise`로 동시 요청 시 재발급 중복 방지)와 `main.jsx`의 `bootstrapAuth`(부팅 시 silent refresh, 완료 전 렌더링 보류) 추가. 테스트 용이성을 위해 `main.jsx`의 부팅 로직을 `export async function bootstrapAuth()`로 분리(모듈 최상위 부수효과를 직접 테스트하기 어려운 문제 해결). 실제 브라우저에서 로그인 후 새로고침 시 네트워크 로그로 `/auth/refresh`→`/events` 순서와 로그인 상태 유지를 확인 |
 | v1.16 | 2026-08-20 | FE-10 완료 반영: 완료조건 5개 체크. `EventListPage`(모바일 1열→데스크톱 grid), `EventDetailPage`(모바일 스택→데스크톱 좌우 2단, `event-detail-page__body` 래퍼 추가), `AuthPage`(모바일 풀폭→데스크톱 400px 카드)에 768px 단일 브레이크포인트 적용. `RouletteResultPage`는 이미 고정폭+중앙정렬 구조라 별도 브레이크포인트 없이 요건 충족. 관리자 CSS는 변경하지 않음(정적 분석 테스트로 고정). 실제 브라우저 375px/1024px에서 가로 스크롤 없음·레이아웃 전환·모바일 참여 플로우까지 확인 |
+| v1.17 | 2026-08-20 | FE-11/FE-12 완료 반영: 완료조건 각 5개/4개 체크. `MyEntriesPage`/`MyProfilePage`/`api/mypageApi.js` 신규 구현(`MyEntry`에 이벤트 제목·참여방식이 없어 건별 `GET /events/{id}`로 보강, FE-4 참여자수 컬럼과 동일한 패턴). `FormFieldsInput` 컴포넌트를 `EventDetailPage`(회원/비회원 폼 공통)와 `AdminEventFormPage`(폼 제출형 필드 정의, 룰렛 경품 UI와 동일 패턴)에 추가, `AdminEntryListPage`에 "제출 내용" 컬럼 추가. 실제 브라우저로 (1) 폼 제출형 이벤트 등록→참여→관리자 목록에서 제출값 확인, (2) 회원가입→마이페이지 진입→내 정보 수정→비밀번호 변경까지 전체 플로우 검증, 테스트 데이터는 확인 후 삭제 |
+| v1.18 | 2026-08-20 | FE-13/FE-14 완료 반영: 완료조건 각 3개/3개 체크. FE-13은 계획이 허용한 대로 별도 페이지 대신 `AdminEntryListPage`에 `ConsentNoteCell` 인라인 편집으로 구현. FE-14는 `AdminEventListPage`에 참여자수 기반 삭제 버튼 비활성화·확인 다이얼로그, `AdminEntryListPage`에 CSV 다운로드 버튼과 `lib/exportCsv.js` 추가. 실제 브라우저 테스트 중 이벤트 삭제 시 `invalidateQueries(['events'])`가 부분 일치로 삭제된 이벤트의 참여자수 하위 쿼리까지 재조회해 404 에러 토스트가 뜨는 버그를 발견해 수정(목록 캐시를 `setQueryData`로 직접 갱신 + `removeQueries`로 하위 쿼리 제거, 불필요한 재조회 자체를 없앰). CSV 다운로드는 실제 파일의 바이트를 확인해 UTF-8 BOM과 한글 정상 인코딩까지 검증 |
 
 - 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.8), [3-prd.md](./3-prd.md)(PRD v1.8), [4-user-scenario.md](./4-user-scenario.md), [5-project-principle.md](./5-project-principle.md), [7-wireframe.md](./7-wireframe.md), [8-erd.md](./8-erd.md), [8-schema.sql](./8-schema.sql)
 - **이 문서의 역할**: 앞선 문서에서 확정된 요구사항·구조·스키마를 **실행 가능한 Task 단위로 분해**한다. 새로운 요구사항이나 설계 결정을 만들지 않으며, 충돌 시 도메인 정의서 → PRD → 프로젝트 원칙 순으로 우선한다.
@@ -600,11 +602,11 @@ flowchart LR
 - `pages/mypage/MyProfilePage.jsx`: 내 정보 조회/수정, 비밀번호 변경
 
 **완료 조건**
-- [ ] 로그인 회원이 본인 참여 내역과 당첨 결과를 조회한다
-- [ ] 룰렛 게임형 신청 건에는 취소 버튼이 아예 보이지 않는다(S-7)
-- [ ] 단순 참여형 신청을 취소하면 목록 상태가 즉시 갱신된다
-- [ ] 내 정보 수정과 비밀번호 변경이 각각 성공한다
-- [ ] 비로그인 사용자는 이 화면에 접근할 수 없다
+- [x] 로그인 회원이 본인 참여 내역과 당첨 결과를 조회한다 (`GET /mypage/entries` + 건별 `GET /events/{id}`로 제목/참여방식 보강. 실제 브라우저에서 빈 상태까지 확인)
+- [x] 룰렛 게임형 신청 건에는 취소 버튼이 아예 보이지 않는다(S-7) (`entry.status===APPLIED && event.participationType!==ROULETTE`일 때만 노출, 단위 테스트로 확인)
+- [x] 단순 참여형 신청을 취소하면 목록 상태가 즉시 갱신된다 (`cancelMutation` 성공 시 `['mypage','entries']` 쿼리 무효화, 단위 테스트로 확인)
+- [x] 내 정보 수정과 비밀번호 변경이 각각 성공한다 (`MyProfilePage` — 단위 테스트 + 실제 브라우저에서 `PATCH /mypage/profile`(200)·`PATCH /mypage/password`(200) 모두 확인, 비밀번호 변경 성공 시 입력값 초기화)
+- [x] 비로그인 사용자는 이 화면에 접근할 수 없다 (`/mypage`, `/mypage/profile` 모두 `RequireAuth`로 보호, 기존 FE-6 가드 재사용)
 
 ---
 
@@ -618,10 +620,10 @@ flowchart LR
 - `AdminEventFormPage.jsx` 확장: 참여 방식으로 폼 제출형 선택 시 필드 정의 입력 영역 노출(룰렛 선택 시 경품 영역이 나타나는 것과 동일한 패턴)
 
 **완료 조건**
-- [ ] 관리자가 폼 제출형 이벤트의 입력 필드를 정의해 등록할 수 있다
-- [ ] 참여자가 정의된 필드를 채우지 않으면 제출이 막힌다
-- [ ] 제출된 값이 관리자 참여신청 목록(FE-5)에서 확인 가능하다
-- [ ] 단순 참여/룰렛 게임형 이벤트 상세 화면에는 이 컴포넌트가 나타나지 않는다
+- [x] 관리자가 폼 제출형 이벤트의 입력 필드를 정의해 등록할 수 있다 (`AdminEventFormPage`에 폼 제출형 옵션과 필드 추가/삭제 UI 구현, 실제 브라우저에서 등록 완료 확인)
+- [x] 참여자가 정의된 필드를 채우지 않으면 제출이 막힌다 (`FormFieldsInput`의 각 필드가 비어 있으면 `formFieldsComplete=false`로 참여 버튼 비활성, 단위 테스트로 확인)
+- [x] 제출된 값이 관리자 참여신청 목록(FE-5)에서 확인 가능하다 (`AdminEntryListPage`에 "제출 내용" 컬럼 추가. 실제 브라우저로 폼 제출형 이벤트 등록→참여→관리자 목록에서 제출값 확인까지 전체 플로우 검증)
+- [x] 단순 참여/룰렛 게임형 이벤트 상세 화면에는 이 컴포넌트가 나타나지 않는다 (`isFormType`이 false면 `FormFieldsInput` 자체를 렌더링하지 않음, 단위 테스트로 확인)
 
 ---
 
@@ -633,9 +635,9 @@ flowchart LR
 - `pages/admin/AdminConsentNotePage.jsx`(또는 `AdminEntryListPage` 내 인라인 편집): 참여신청 건별 메모 입력란 1개
 
 **완료 조건**
-- [ ] 관리자가 특정 참여신청 건에 메모를 작성·수정할 수 있다
-- [ ] 저장 후 새로고침해도 메모가 유지된다
-- [ ] 참여자(회원/비회원) 쪽 화면에는 이 메모가 노출되지 않는다
+- [x] 관리자가 특정 참여신청 건에 메모를 작성·수정할 수 있다 (`AdminEntryListPage` 내 `ConsentNoteCell` 인라인 편집 — 별도 페이지 대신 계획에서 허용한 인라인 방식 채택. 단위 테스트 + 실제 브라우저로 작성·수정 확인)
+- [x] 저장 후 새로고침해도 메모가 유지된다 (메모는 클라이언트 상태가 아니라 매번 `GET /events/{id}/entries`로 새로 조회한 값을 표시. 실제 브라우저에서 페이지 재방문 후 유지 확인)
+- [x] 참여자(회원/비회원) 쪽 화면에는 이 메모가 노출되지 않는다 (`RouletteResultPage`가 `entry.consentNote`를 전혀 읽지 않음을 테스트로 고정 — Entry 응답에 필드가 존재해도 화면엔 렌더링되지 않음)
 
 ---
 
@@ -649,9 +651,9 @@ flowchart LR
 - `lib/exportCsv.js`: 다운로드 트리거 유틸(별도 라이브러리 도입 없이 브라우저 기본 다운로드로 처리)
 
 **완료 조건**
-- [ ] 참여신청이 있는 이벤트에는 삭제 버튼이 비활성화되거나 클릭 시 서버 거부 메시지가 표시된다
-- [ ] 참여신청이 없는 이벤트는 삭제 후 목록에서 사라진다
-- [ ] CSV 다운로드 버튼 클릭 시 파일이 내려받아지고 엑셀에서 한글이 깨지지 않는다
+- [x] 참여신청이 있는 이벤트에는 삭제 버튼이 비활성화되거나 클릭 시 서버 거부 메시지가 표시된다 (`AdminEventListPage`의 `EventRow`가 참여자수를 조회해 `entryCount>0`(또는 로딩 중)이면 삭제 버튼을 비활성화. 실제 브라우저로 참여신청 1건 있는 이벤트의 삭제 버튼이 비활성 상태임을 확인)
+- [x] 참여신청이 없는 이벤트는 삭제 후 목록에서 사라진다 (확인 다이얼로그 → `DELETE /events/{id}` → 목록 캐시에서 즉시 제거. 실제 브라우저로 삭제 후 행이 사라짐을 확인)
+- [x] CSV 다운로드 버튼 클릭 시 파일이 내려받아지고 엑셀에서 한글이 깨지지 않는다 (`lib/exportCsv.js`의 `downloadBlob`으로 브라우저 기본 다운로드 트리거. 실제 브라우저로 다운로드된 파일의 바이트를 확인해 UTF-8 BOM(`EF BB BF`) 존재와 한글 정상 디코딩을 검증)
 
 ---
 
