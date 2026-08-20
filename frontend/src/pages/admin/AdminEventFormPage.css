@@ -1,0 +1,54 @@
+.admin-event-form {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.admin-event-form label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-small, 0.875rem);
+}
+
+.admin-event-form input[type='text'],
+.admin-event-form input:not([type='radio']):not([type='checkbox']) {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font: 400 var(--text-body, 1rem) var(--font-sans);
+}
+
+.admin-event-form fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+}
+
+.admin-event-form__toggle {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.admin-event-form__prize-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.field-error {
+  color: var(--color-danger-500);
+  font-size: var(--text-small, 0.875rem);
+  margin: 0;
+}
+
+.admin-event-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}

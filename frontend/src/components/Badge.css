@@ -1,0 +1,28 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+  font: 500 var(--text-caption, 0.75rem)/1 var(--font-sans);
+}
+
+/* docs/10-style.md 2절 상태값 → 색상 매핑 */
+.badge--neutral {
+  color: var(--color-gray-500);
+  background: var(--color-gray-100);
+}
+
+.badge--primary {
+  color: var(--color-primary-600);
+  background: var(--color-primary-50);
+}
+
+.badge--muted {
+  color: var(--color-gray-400);
+  background: var(--color-gray-100);
+}
+
+.badge--amber {
+  color: #fff;
+  background: var(--color-amber-500);
+}

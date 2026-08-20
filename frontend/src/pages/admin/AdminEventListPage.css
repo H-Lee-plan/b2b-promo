@@ -1,0 +1,37 @@
+.admin-event-list {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-6);
+}
+
+.admin-event-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-event-list__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: var(--space-4) 0;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-table tbody tr {
+  cursor: pointer;
+}
+
+.admin-table tbody tr:nth-child(even) {
+  background: var(--color-surface);
+}

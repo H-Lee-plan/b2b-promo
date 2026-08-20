@@ -1,0 +1,64 @@
+.event-detail-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.event-detail-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.event-detail-page__info {
+  margin-bottom: var(--space-5);
+}
+
+.event-detail-page__notice {
+  color: var(--color-text-muted);
+}
+
+.event-detail-page__actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.event-detail-page__action form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.event-detail-page__action label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-small, 0.875rem);
+}
+
+.event-detail-page__action input {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font: 400 var(--text-body, 1rem) var(--font-sans);
+}
+
+/* 반응형: 768px 단일 브레이크포인트만 사용(모바일 세로 스택 → 데스크톱 좌우 2단) */
+@media (min-width: 768px) {
+  .event-detail-page {
+    max-width: 960px;
+  }
+
+  .event-detail-page__body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    align-items: start;
+  }
+
+  .event-detail-page__info {
+    margin-bottom: 0;
+  }
+}

@@ -11,8 +11,9 @@
 | v1.6 | 2026-08-14 | **백엔드 한정 예외 명시**: `backend/CLAUDE.md`가 SOLID·Clean Architecture를 명시적으로 요구함에 따라, 백엔드는 실제로 이 문서 1절의 "레이어 3개 고정" 원칙을 적용하지 않고 domain/application/infrastructure/interfaces 4계층 구조로 구현되어 있다(사용자의 명시적 선택). 이 문서 1·2·6절의 백엔드 레이어·디렉토리 서술은 최초 설계 의도를 보여주는 기록으로 남기되, **실제 백엔드 구조의 최종 근거는 `backend/CLAUDE.md`와 실제 코드**이며 이 문서와 충돌할 경우 그쪽을 따른다. 프론트엔드(FE) 관련 원칙은 이 변경의 영향을 받지 않는다 |
 | v1.7 | 2026-08-20 | 사용자 요청으로 P0/P1 우선순위 구분 제거(PRD v1.7과 정합) — 1절의 "참여 방식 2종(P0)"/"P1 폼 제출형 추가" 표현 정리, 6·7절 디렉토리 트리의 `# P0`/`[P1]` 태그 전부 제거(우선순위가 아니라 9-plan.md 체크박스로 구현 여부를 추적). 6·7절은 v1.6에 따라 여전히 최초 설계 의도의 기록이며, 실제 백엔드 구조의 최종 근거는 `backend/CLAUDE.md`다 |
 | v1.8 | 2026-08-20 | 사용자 요청으로 JWT 시크릿을 `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` 2개에서 `JWT_SECRET` 1개로 통합(**Access/Refresh가 같은 시크릿을 공유하도록 보안 설계 변경** — 하나가 유출되면 다른 토큰도 위조 가능해짐, 사용자가 트레이드오프를 인지하고 명시적으로 선택). 만료 시간을 하드코딩(`1h`/`14d`)에서 `JWT_ACCESS_EXPIRES_IN`/`JWT_REFRESH_EXPIRES_IN` 환경변수로 뺌(기본값은 기존과 동일하게 유지, PRD의 Refresh 14일 규칙 변경 없음). 필수 환경변수가 5개에서 4개로 줄어듦 |
+| v1.9 | 2026-08-20 | 백엔드 실구현 대비 정합성 감사 반영: (1) 이벤트 삭제(FR-2.6/BE-12) 도입으로 실제 에러 코드가 7개(`EVENT_HAS_ENTRIES` 추가)인데 "6개"로 남아있던 서술 전체 수정, (2) 연락처 형식 검증 언급이 실제로는 필수값 검증만 하는 코드와 달라 문구 수정, (3) PRD 참조 버전을 v1.6→v1.8로 갱신 |
 
-- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md), [3-prd.md](./3-prd.md)(PRD v1.6), [4-user-scenario.md](./4-user-scenario.md)
+- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [2-usecase.md](./2-usecase.md), [3-prd.md](./3-prd.md)(PRD v1.8), [4-user-scenario.md](./4-user-scenario.md)
 - **이 문서의 역할**: PRD 4절에서 이미 확정된 기술 스택(React 19 + Zustand + TanStack Query / Node.js + Express + `pg` / PostgreSQL 17 / 쿠키 없는 Access·Refresh JWT)을 그대로 전제하고, "그 스택으로 코드를 어떻게 배치할지"만 다룬다. 스택 재논의·신규 도구 도입 제안은 이 문서의 범위가 아니다.
 
 ## 1. 모든 스택에 공통인 최상위 원칙
@@ -20,7 +21,7 @@
 - **필요해지기 전에는 만들지 않는다.** 폼 제출형(FR-2.3), 마이페이지(FR-2.1/2.2), 동의 메모(FR-2.4), rate limit(FR-2.5), 삭제/엑셀 다운로드(FR-2.6) 같은 후행 기능은 6·7절 트리에 파일명과 책임만 미리 표시해 두되, 실제 폴더·코드는 착수 시점에 만든다. 지금 빈 폴더나 빈 파일을 미리 파 두지 않는다 — PRD가 이미 "3일 안에 실제로 쓰는 것만" 우선 확정했기 때문에, 코드 구조도 같은 기준을 따라야 나중에 버릴 코드가 없다.
 - **레이어는 3개로 고정한다(프론트: 화면-상태-API, 백엔드: 라우트-핸들러-쿼리).** 서비스/리포지토리/유스케이스 같은 중간 레이어를 추가하지 않는다 — 테이블 5개, API 10여 개 규모에서 레이어를 늘리면 코드를 찾는 시간이 로직을 짜는 시간보다 길어진다.
 - **도메인 규칙은 문서(도메인 정의서 6~8절)의 표현 그대로 코드 한 곳에만 존재한다.** 같은 검증(대상유형 불일치, 동의 필수, 중복 방지)을 프론트·백엔드 양쪽에 구현하되, 서버 쪽이 항상 최종 판정이며 프론트 검증은 UX용 사본일 뿐임을 주석 등으로 명시하지 않아도 되게, 서버 검증 로직을 함수 하나로 모아 재사용한다(레이어 2 참고).
-- **설정 가능한 값을 늘리지 않는다.** 환경변수 5개, 에러 코드 6개, 참여 방식 2종(단순/룰렛)처럼 PRD가 정한 목록 밖의 옵션·플래그·전략 패턴을 만들지 않는다. 목록이 실제로 늘어나는 시점(폼 제출형 추가 등)에 그때 확장한다.
+- **설정 가능한 값을 늘리지 않는다.** 환경변수 4개, 에러 코드 7개, 참여 방식 3종(단순/폼 제출형/룰렛)처럼 PRD가 정한 목록 밖의 옵션·플래그·전략 패턴을 만들지 않는다. 목록이 실제로 늘어나는 시점에 그때 확장한다.
 - **파일·폴더는 기능이 생길 때 만든다.** 빈 `services/`, `utils/`, `hooks/` 같은 범용 폴더를 미리 만들지 않고, 실제로 두 번째로 재사용되는 코드가 나올 때 그 코드를 옮길 폴더를 만든다.
 
 ## 2. 의존성/레이어 원칙
@@ -71,9 +72,9 @@ PRD 7절 결정("테스트 자동화 스위트 없음, 룰렛 가중치 추첨�
 - **JWT**: HS256으로 서명하고 Access/Refresh 모두 단일 시크릿(`JWT_SECRET`)으로 서명한다(사용자의 명시적 선택 — v1.8). 만료 시간은 `JWT_ACCESS_EXPIRES_IN`/`JWT_REFRESH_EXPIRES_IN` 환경변수로 설정한다. payload에는 `userId`/`role`만 담고 이메일 등 개인정보는 넣지 않는다(토큰은 클라이언트에 그대로 저장되는 값이므로). 서명 검증은 `middleware/auth.js` 한 곳에서만 하고, 나머지 코드는 이 미들웨어를 통과한 `req.user`만 신뢰한다.
 - **비밀번호 해시**: bcrypt, salt rounds 10. 이 규모의 트래픽에서 rounds를 더 올려 로그인 응답을 늦출 이유가 없다. 평문 비밀번호는 로그·에러 메시지 어디에도 남기지 않는다.
 - **CORS**: 운영에서는 Express가 프론트 빌드(`dist/`)를 같은 오리진으로 정적 서빙하므로(4절 배포) CORS 설정 자체가 필요 없다. 로컬 개발에서만 Vite dev 서버(다른 포트)가 API를 호출하므로, 개발 환경(`NODE_ENV !== 'production'`)에 한해 `cors` 미들웨어에 `FRONTEND_ORIGIN`(기본값 `http://localhost:5173`) 오리진 하나만 허용 목록으로 넣는다. 쿠키를 쓰지 않으므로(4절) `credentials: true`나 와일드카드(`*`)는 쓰지 않는다.
-- **에러 핸들링**: PRD 4절 포맷 `{ "error": { "code": "STRING_CODE", "message": "..." } }`을 Express 공통 에러 미들웨어 1개(`middleware/errorHandler.js`)에서만 생성한다. 개별 핸들러는 `throw new AppError('DUPLICATE_ENTRY', '...')` 형태로 던지기만 하고 응답 형식을 직접 만들지 않는다. 기존 4개 코드(`DUPLICATE_ENTRY`/`TARGET_TYPE_MISMATCH`/`EVENT_CLOSED`/`CONSENT_REQUIRED`)에 입력 검증 실패용 `VALIDATION_ERROR`(400)를 더한다. 그 외 예상 못한 예외는 전부 이 미들웨어가 500 + `INTERNAL_ERROR`로 통일 응답하고, 실제 에러 스택은 서버 로그에만 남기며 클라이언트 응답에는 절대 포함하지 않는다.
+- **에러 핸들링**: PRD 4절 포맷 `{ "error": { "code": "STRING_CODE", "message": "..." } }`을 Express 공통 에러 미들웨어 1개(`middleware/errorHandler.js`)에서만 생성한다. 개별 핸들러는 `throw new AppError('DUPLICATE_ENTRY', '...')` 형태로 던지기만 하고 응답 형식을 직접 만들지 않는다. 비즈니스 에러 코드 5개(`DUPLICATE_ENTRY`/`TARGET_TYPE_MISMATCH`/`EVENT_CLOSED`/`CONSENT_REQUIRED`/`EVENT_HAS_ENTRIES`)에 입력 검증 실패용 `VALIDATION_ERROR`(400)를 더한다. 그 외 예상 못한 예외는 전부 이 미들웨어가 500 + `INTERNAL_ERROR`로 통일 응답하고, 실제 에러 스택은 서버 로그에만 남기며 클라이언트 응답에는 절대 포함하지 않는다.
 - **로깅**: Winston/Pino 등 로깅 라이브러리를 도입하지 않는다. 요청 단위로 `메서드 경로 상태코드 응답시간`을 한 줄 남기는 미들웨어 하나(5줄 내외)와, 500 에러 발생 시 스택을 `console.error`로 남기는 것으로 충분하다. 비밀번호·JWT 토큰·이메일/연락처 등 개인정보는 어떤 로그에도 남기지 않는다. 로그는 파일로 수집하지 않고 `pm2`의 표준출력 로그(`pm2 logs`)로 확인한다 — 3일 프로젝트에 로그 수집 인프라(ELK 등)는 과하다.
-- **입력 검증**: Zod/Joi 같은 검증 라이브러리를 도입하지 않는다. 각 핸들러 진입부에서 필수 필드 존재 여부와 도메인 정의서 4절의 형식 규칙(이메일 형식, 비밀번호 8자 이상, 연락처 형식, `weight` 1 이상 정수)만 if문으로 직접 검사하고, 실패 시 `VALIDATION_ERROR`(400)로 응답한다. 검증 로직이 늘어나 핸들러가 지저분해지는 시점(예: 필드 5개 이상)이 오면 그때 해당 엔티티 하나에 한해 검증 함수를 분리한다.
+- **입력 검증**: Zod/Joi 같은 검증 라이브러리를 도입하지 않는다. 각 핸들러 진입부에서 필수 필드 존재 여부와 도메인 정의서 4절의 형식 규칙(이메일 형식, 비밀번호 8자 이상, `weight` 1 이상 정수)만 if문으로 직접 검사하고 연락처는 필수값 여부만 확인하며, 실패 시 `VALIDATION_ERROR`(400)로 응답한다. 검증 로직이 늘어나 핸들러가 지저분해지는 시점(예: 필드 5개 이상)이 오면 그때 해당 엔티티 하나에 한해 검증 함수를 분리한다.
 - **인증/보안(그 외)**: Refresh Token은 해시로 `refresh_tokens` 테이블에 저장 후 재발급 시 회전. 관리자 API는 라우트 진입 시 role 미들웨어로 검증. 이 항목들은 PRD 7절에서 "절대 간소화 대상 아님"으로 못박혔으므로 축소하지 않는다. 반대로 재사용 탐지/전기기 로그아웃/Redis 세션 저장소는 PRD가 명시적으로 배제했으므로 추가하지 않는다.
 - **배포**: 단일 VM, Express가 프론트 빌드 결과(`dist/`)를 정적 서빙, Caddy가 리버스 프록시+자동 TLS, `pm2`가 프로세스 관리. Docker/오케스트레이션 도입하지 않는다. 배포 스크립트는 `npm run build && pm2 restart` 수준의 셸 커맨드 몇 줄로 충분하며 별도 CI/CD 파이프라인을 구성하지 않는다.
 
@@ -111,7 +112,7 @@ frontend/
         MyEntriesPage.jsx        # 참여 내역/당첨 결과 조회 + 신청 취소(FR-2.2, 룰렛은 버튼 미노출)
         MyProfilePage.jsx        # 내 정보 조회/수정, 비밀번호 변경
     components/
-      Toast.jsx                  # 공통 에러 토스트 1개(에러 코드 6종 공용)
+      Toast.jsx                  # 공통 에러 토스트 1개(에러 코드 7종 공용)
       ConsentCheckbox.jsx        # 동의 문구 + 보유기간 고지 (회원/비회원 공용)
       FormFieldsInput.jsx        # FR-2.3 폼 제출형 이벤트의 관리자 정의 필드 입력(EventDetailPage에서 참여방식이 폼 제출형일 때만 사용)
     lib/
@@ -137,7 +138,7 @@ backend/
       rowMapper.js                # snake_case row → camelCase 객체 변환 공용 함수
     shared/
       enums.js                   # 3절 표의 Enum 상수(참여 대상유형/참여방식/상태 등)
-      errors.js                  # AppError 클래스 + 6개 에러 코드 상수(비즈니스 4 + VALIDATION_ERROR + INTERNAL_ERROR)
+      errors.js                  # AppError 클래스 + 7개 에러 코드 상수(비즈니스 5 + VALIDATION_ERROR + INTERNAL_ERROR)
     middleware/
       auth.js                    # JWT 검증 + role 체크
       errorHandler.js            # 공통 에러 응답 포맷 생성 (VALIDATION_ERROR/INTERNAL_ERROR 포함)

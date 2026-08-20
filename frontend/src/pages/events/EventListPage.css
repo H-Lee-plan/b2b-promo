@@ -1,0 +1,70 @@
+.event-list-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.event-list-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+
+.event-list-page__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* 반응형: 768px 단일 브레이크포인트만 사용(docs/10-style.md 4절, docs/5-project-principle.md FE-10) */
+@media (min-width: 768px) {
+  .event-list-page {
+    max-width: 960px;
+  }
+
+  .event-list-page__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+.event-card {
+  display: block;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.event-card--pinned {
+  border: 1px solid var(--color-primary-500);
+}
+
+@media (hover: hover) {
+  .event-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.event-card__pin {
+  display: block;
+  color: var(--color-primary-600);
+  font-size: var(--text-caption, 0.75rem);
+  margin-bottom: var(--space-1);
+}
+
+.event-card__title {
+  font: 600 var(--text-h2, 1.25rem)/1.35 var(--font-sans);
+  margin: 0 0 var(--space-2);
+}
+
+.event-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--color-text-muted);
+  font-size: var(--text-small, 0.875rem);
+}

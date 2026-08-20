@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "온리원이벤트 API",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "식자재 유통 B2B 고객사 대상 이벤트 참여 웹앱 \"온리원이벤트\"의 REST API 명세.\nFR-1.0~FR-1.11(인증, 이벤트, 참여신청)과 FR-2.1~FR-2.6(마이페이지, 참여신청 취소/재신청, 폼 제출형 이벤트, 동의 보유 내용 작성, 로그인 rate limit, 이벤트 삭제/CSV 다운로드)을 모두 포함한다.\n인증은 쿠키를 사용하지 않으며(PRD 4절), Access/Refresh Token을 모두 요청/응답 바디로 주고받는다."
   },
   "servers": [
@@ -81,7 +81,7 @@
           "email": { "type": "string", "format": "email" },
           "companyName": { "type": "string" },
           "name": { "type": "string" },
-          "phone": { "type": "string", "description": "숫자·하이픈, 국내 휴대전화 형식", "example": "010-1234-5678" }
+          "phone": { "type": "string", "description": "필수값 여부만 검증, 형식 검증 없음", "example": "010-1234-5678" }
         }
       },
       "Prize": {
@@ -206,7 +206,7 @@
             "description": "개인정보 동의 여부(회원: 개인정보 사용 동의, 비회원: 개인정보 수집·이용 및 보유기간 동의). true가 아니면 CONSENT_REQUIRED로 거부된다."
           },
           "guestEmail": { "type": "string", "format": "email", "description": "비회원 참여 시 필수. 동일 인물 판단 기준(trim+소문자 정규화 후 비교)" },
-          "guestPhone": { "type": "string", "description": "비회원 참여 시 필수. 숫자·하이픈, 국내 휴대전화 형식" },
+          "guestPhone": { "type": "string", "description": "비회원 참여 시 필수. 필수값 여부만 검증, 형식 검증 없음" },
           "guestInfo": {
             "type": "object",
             "description": "비회원 참여 시 필수. 업체명/이름/연락처 등",
@@ -670,7 +670,7 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Entry" } } }
           },
           "400": {
-            "description": "개인정보 미동의(CONSENT_REQUIRED) 또는 입력값 검증 실패(VALIDATION_ERROR: 비회원 필수 항목 누락, 이메일/연락처 형식 오류, FORM 이벤트의 formData 필수 항목 누락 등)",
+            "description": "개인정보 미동의(CONSENT_REQUIRED) 또는 입력값 검증 실패(VALIDATION_ERROR: 비회원 필수 항목 누락, 이메일 형식 오류, FORM 이벤트의 formData 필수 항목 누락 등)",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           },
           "401": {

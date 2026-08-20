@@ -1,0 +1,46 @@
+.auth-page {
+  width: 100%;
+  padding: var(--space-6) var(--space-4);
+}
+
+/* 반응형: 768px 단일 브레이크포인트만 사용(모바일 풀폭 → 데스크톱 400px 고정폭 중앙 카드) */
+@media (min-width: 768px) {
+  .auth-page {
+    max-width: 400px;
+    margin: var(--space-8) auto;
+    padding: var(--space-6);
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-md);
+  }
+}
+
+.auth-page form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.auth-page label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-small, 0.875rem);
+}
+
+.auth-page input {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font: 400 var(--text-body, 1rem) var(--font-sans);
+}
+
+.auth-page input:focus {
+  outline: 2px solid var(--color-primary-50);
+  border-color: var(--color-primary-500);
+}
+
+.field-error {
+  color: var(--color-danger-500);
+  font-size: var(--text-small, 0.875rem);
+  margin: 0;
+}

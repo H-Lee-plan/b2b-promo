@@ -9,8 +9,17 @@
 | v1.5 | 2026-08-14 | `backend/CLAUDE.md`(SOLID·Clean Architecture 필수)를 반영해 백엔드 전체를 domain/application/infrastructure/interfaces 4계층으로 전면 리팩터링(BE-1~8). 이에 따라 BE-1~8 절의 "작업 내용"에 적힌 파일 경로(`src/config/`, `src/db/`, `src/handlers/`, `src/middleware/`, `src/routes/`, `src/shared/`)는 리팩터링 이전 시점 기록이며 더 이상 실제 경로와 일치하지 않는다 — 현재 구조는 `backend/CLAUDE.md`를 따른다. 완료조건 자체(동작·검증 내용)는 변경 없이 그대로 유효하다. **주의**: 이 결정은 `5-project-principle.md`의 "레이어 3개 고정" 원칙 및 최상위 `CLAUDE.md`의 "오버엔지니어링 금지"와 상충하며, 사용자가 명시적으로 선택함(BE-9~12는 아래 새 경로 기준으로 갱신) |
 | v1.6 | 2026-08-20 | 사용자 요청으로 P0/P1 우선순위 구분 제거(PRD v1.7과 정합) — 실제로 BE-1~12(과거 P0+P1 전체)가 우선순위 구분 없이 순서대로 완료된 상태를 반영. 별도였던 "5. P1 확장 작업" 절을 없애고 BE-8~12/FE-11~14/OPS-3를 각각 2·3·4절(BE/FE/OPS)에 통합, 0절 의존성 다이어그램의 점선(P1 착수) 표시를 실선으로 통일, "일자별 배치" 표의 "4일차 이후(P1)" 행을 "이후 일정" 표현으로 정리, 부록 Task↔FR 대응표의 "4+ (P1)" 표기를 "이후"로 단순화. Task 번호(BE-8부터 등)와 완료조건 자체는 그대로 유지 — 번호가 과거 우선순위 그룹의 흔적일 뿐 더 이상 우선순위를 의미하지 않는다는 점만 달라짐 |
 | v1.7 | 2026-08-20 | 사용자 요청으로 JWT 필수 환경변수를 `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` 2개에서 `JWT_SECRET` 1개로 통합(상세는 5-project-principle.md v1.8, 3-prd.md v1.8 참고). DB-1/BE-1 절의 "5개 변수" 서술을 "필수 4개"로 갱신 |
+| v1.8 | 2026-08-20 | 백엔드 실구현 대비 정합성 감사 반영: (1) `backend/src/db/schema.sql` 경로가 BE-1~8 리팩터링 후 `backend/src/infrastructure/db/schema.sql`로 이동했는데 DB-2 완료조건에 옛 경로가 남아있어 수정, (2) 이벤트 삭제(BE-12) 도입으로 실제 에러 코드가 7개(`EVENT_HAS_ENTRIES` 포함)인데 "6개"로 남아있던 BE-2/FE-3 서술 수정, (3) PRD 참조 버전을 v1.6→v1.8로 갱신 |
+| v1.9 | 2026-08-20 | FE-1 완료 반영: 완료조건 4개 체크, FE-1 작업 내용의 `backend/shared/enums.js`(리팩터링 이전 경로) 참조를 실제 경로 `backend/src/domain/enums.js`로 수정, 관련 문서 참조의 도메인 정의서 버전을 v1.7→v1.8로 갱신 |
+| v1.10 | 2026-08-20 | FE-2 완료 반영: 완료조건 4개 체크(`src/api/client.js`, `src/store/authStore.js`, `src/api/authApi.js`/`eventsApi.js`/`entriesApi.js`, TanStack Query Provider) |
+| v1.11 | 2026-08-20 | FE-3 완료 반영: 완료조건 3개 체크(`src/components/Toast.jsx`, `src/store/toastStore.js`, `src/lib/queryClient.js`의 전역 `onError` 연동). 부수적으로 `docs/10-style.md` 2·3·4·5·7절 토큰을 `src/styles/tokens.css`로 최초 이관 |
+| v1.12 | 2026-08-20 | FE-4 완료 반영: 완료조건 7개 체크(`AdminLoginPage`/`AdminEventListPage`/`AdminEventFormPage`, 공용 `Badge`/`ConfirmDialog`/`RequireAdmin`). 마지막 완료조건은 Playwright로 로컬 dev 서버 대상 실제 브라우저 E2E(로그인→룰렛 등록→목록 확인→종료)를 1회 실행해 검증. 참여자수 컬럼은 백엔드에 이벤트 목록 API가 집계값을 제공하지 않아 행별로 `GET /events/{id}/entries`를 조회해 계산(오버엔지니어링 방지 차원에서 별도 집계 API를 새로 만들지 않음) |
+| v1.13 | 2026-08-20 | FE-5/FE-6 완료 반영: 완료조건 각 5개씩 체크(`AdminEntryListPage`, `LoginPage`/`SignupPage`/`RequireAuth`/`MyEntriesPage` 로그아웃). 두 Task 모두 실제 브라우저 E2E(Playwright, 로컬 dev 서버 3000/5173 대상)로 핵심 시나리오를 추가 검증. 부수적으로 FE-1에서 `pages/participant/`로 잘못 만들었던 참여자 화면 디렉토리를 5-project-principle.md 6절이 정한 `pages/events/`·`pages/auth/`·`pages/mypage/` 구조에 맞게 재배치(파일 내용은 변경 없음, 경로만 수정) |
+| v1.14 | 2026-08-20 | FE-7/FE-8 완료 반영: 완료조건 각 8개/6개 체크(`EventListPage`/`EventDetailPage`(3분기)/`ConsentCheckbox`/`RouletteResultPage`). 정렬은 백엔드가 이미 보장하므로 프론트는 응답 순서를 그대로 렌더링. 단순 참여형은 FR-1.10 대상이 아니므로 결과 화면 대신 상세 페이지 내 인라인 완료 문구로 처리(도메인상 룰렛 결과 화면과 별개 화면, 별도 Task 없음). 실제 브라우저 E2E로 비회원 룰렛 참여 → 당첨 결과 → 동일 이메일 재참여 시 `DUPLICATE_ENTRY` Toast까지 확인, 테스트 데이터는 확인 후 삭제 |
+| v1.15 | 2026-08-20 | FE-9 완료 반영: 완료조건 5개 체크. `api/client.js`에 401 인터셉터(모듈 스코프 `refreshPromise`로 동시 요청 시 재발급 중복 방지)와 `main.jsx`의 `bootstrapAuth`(부팅 시 silent refresh, 완료 전 렌더링 보류) 추가. 테스트 용이성을 위해 `main.jsx`의 부팅 로직을 `export async function bootstrapAuth()`로 분리(모듈 최상위 부수효과를 직접 테스트하기 어려운 문제 해결). 실제 브라우저에서 로그인 후 새로고침 시 네트워크 로그로 `/auth/refresh`→`/events` 순서와 로그인 상태 유지를 확인 |
+| v1.16 | 2026-08-20 | FE-10 완료 반영: 완료조건 5개 체크. `EventListPage`(모바일 1열→데스크톱 grid), `EventDetailPage`(모바일 스택→데스크톱 좌우 2단, `event-detail-page__body` 래퍼 추가), `AuthPage`(모바일 풀폭→데스크톱 400px 카드)에 768px 단일 브레이크포인트 적용. `RouletteResultPage`는 이미 고정폭+중앙정렬 구조라 별도 브레이크포인트 없이 요건 충족. 관리자 CSS는 변경하지 않음(정적 분석 테스트로 고정). 실제 브라우저 375px/1024px에서 가로 스크롤 없음·레이아웃 전환·모바일 참여 플로우까지 확인 |
 
-- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.7), [3-prd.md](./3-prd.md)(PRD v1.6), [4-user-scenario.md](./4-user-scenario.md), [5-project-principle.md](./5-project-principle.md), [7-wireframe.md](./7-wireframe.md), [8-erd.md](./8-erd.md), [8-schema.sql](./8-schema.sql)
+- 관련 문서: [1-domain-definition.md](./1-domain-definition.md)(도메인 정의서 v1.8), [3-prd.md](./3-prd.md)(PRD v1.8), [4-user-scenario.md](./4-user-scenario.md), [5-project-principle.md](./5-project-principle.md), [7-wireframe.md](./7-wireframe.md), [8-erd.md](./8-erd.md), [8-schema.sql](./8-schema.sql)
 - **이 문서의 역할**: 앞선 문서에서 확정된 요구사항·구조·스키마를 **실행 가능한 Task 단위로 분해**한다. 새로운 요구사항이나 설계 결정을 만들지 않으며, 충돌 시 도메인 정의서 → PRD → 프로젝트 원칙 순으로 우선한다.
 - **범위**: PRD 3절의 기능 목록(FR-1.0~1.11, FR-2.1~2.6) 전체를 다룬다. 우선순위 구분(P0/P1)은 두지 않는다(PRD v1.7) — FR-1.0~1.11이 먼저, FR-2.x가 이어서 진행되는 순서 자체는 유지되지만 이는 "먼저 하는 것"과 "나중에 하는 것"의 순서일 뿐 반드시 지켜야 할 우선순위 구분은 아니다.
 - **Task ID 체계**: `DB-n`(데이터베이스) / `BE-n`(백엔드) / `FE-n`(프론트엔드) / `OPS-n`(통합·배포). FR-2.x에 대응하는 Task는 FR-1.x Task 번호에 이어서 채번한다(BE-8부터, FE-11부터 등) — 번호는 과거 우선순위 그룹의 흔적이며 지금은 안정된 식별자일 뿐이다
@@ -103,7 +112,7 @@ flowchart LR
 **선행 Task**: DB-1
 
 **작업 내용**
-- `docs/8-schema.sql`을 `backend/src/db/schema.sql`로 그대로 복사(내용 변경 금지 — 두 경로는 같은 내용, 다른 위치)
+- `docs/8-schema.sql`을 `backend/src/infrastructure/db/schema.sql`로 그대로 복사(내용 변경 금지 — 두 경로는 같은 내용, 다른 위치. 최초 설계 시점엔 `backend/src/db/schema.sql`이었으나 BE-1~8 Clean Architecture 리팩터링으로 경로가 이동함, v1.5 참고)
 - 해당 SQL을 대상 DB에 실행하여 테이블 5개(`users`/`events`/`prizes`/`entries`/`refresh_tokens`)와 제약·인덱스를 생성
 
 **완료 조건**
@@ -112,7 +121,7 @@ flowchart LR
 - [x] `entries.user_agent`, `entries.consent_note` 컬럼이 존재한다(둘 다 nullable, 이 Task 범위에서는 값을 채우지 않아도 무방)
 - [x] 잘못된 Enum 값 삽입 시 CHECK 제약으로 거부된다 (예: `events.status = 'FOO'` INSERT 실패) — `events_status_check` 위반으로 거부 확인
 - [x] `prizes.weight = 0` INSERT가 CHECK 제약으로 거부된다 — `prizes_weight_check` 위반으로 거부 확인
-- [x] `docs/8-schema.sql`과 `backend/src/db/schema.sql`의 내용이 동일하다 (`diff` 결과 동일)
+- [x] `docs/8-schema.sql`과 `backend/src/infrastructure/db/schema.sql`의 내용이 동일하다 (`diff` 결과 동일)
 
 ---
 
@@ -161,7 +170,7 @@ flowchart LR
 
 **작업 내용**
 - `src/shared/enums.js`: 프로젝트 원칙 3절 매핑표의 코드 상수 5종(`targetType`/`participationType`/`Event.status`/`Entry.status`/`User.role`)
-- `src/shared/errors.js`: `AppError` 클래스 + 에러 코드 6개(`DUPLICATE_ENTRY`, `TARGET_TYPE_MISMATCH`, `EVENT_CLOSED`, `CONSENT_REQUIRED`, `VALIDATION_ERROR`, `INTERNAL_ERROR`)
+- `src/shared/errors.js`: `AppError` 클래스 + 에러 코드 7개(`DUPLICATE_ENTRY`, `TARGET_TYPE_MISMATCH`, `EVENT_CLOSED`, `CONSENT_REQUIRED`, `EVENT_HAS_ENTRIES`, `VALIDATION_ERROR`, `INTERNAL_ERROR`)
 - `src/middleware/errorHandler.js`: `{ "error": { "code", "message" } }` 포맷 단일 생성 지점. 예상 못한 예외는 500+`INTERNAL_ERROR`로 통일하고 스택은 서버 로그에만
 - `src/middleware/requestLogger.js`: `메서드 경로 상태코드 응답시간` 한 줄 로그
 - `src/db/rowMapper.js`: snake_case row → camelCase 객체 범용 변환
@@ -398,15 +407,15 @@ flowchart LR
 **작업 내용**
 - `frontend/` 초기화(Vite + React 19), 의존성: `zustand`, `@tanstack/react-query`, `react-router-dom`
 - **TypeScript 도입 금지** — 컴포넌트는 `.jsx`, 그 외 모듈은 `.js`
-- `src/constants/domain.js`: 백엔드 `shared/enums.js`와 **같은 값**을 복사(모노레포·공유 패키지 금지)
+- `src/constants/domain.js`: 백엔드 `backend/src/domain/enums.js`와 **같은 값**을 복사(모노레포·공유 패키지 금지)
 - `src/App.jsx`: 라우팅 골격(참여자 경로 / 관리자 경로 분리)
 - 로컬 개발용 Vite proxy 또는 dev 오리진 CORS 허용 설정
 
 **완료 조건**
-- [ ] `npm run dev`로 개발 서버가 뜨고 빈 라우트가 렌더링된다
-- [ ] `.ts`/`.tsx` 파일이 하나도 없다
-- [ ] `constants/domain.js`의 Enum 값이 백엔드 `shared/enums.js`와 스펠링까지 동일하다
-- [ ] 로컬에서 프론트 → 백엔드 API 호출이 CORS 오류 없이 성공한다
+- [x] `npm run dev`로 개발 서버가 뜨고 빈 라우트가 렌더링된다 (Vite dev 서버 200 OK, `/`에서 EventListPage 플레이스홀더 렌더링 확인)
+- [x] `.ts`/`.tsx` 파일이 하나도 없다 (`frontend/src` 전체 확인, 0건)
+- [x] `constants/domain.js`의 Enum 값이 백엔드 `shared/enums.js`와 스펠링까지 동일하다 (실제 경로는 `backend/src/domain/enums.js` — Clean Architecture 리팩터링 후 경로. `domain.test.js`가 두 파일을 직접 비교하는 테스트로 검증)
+- [x] 로컬에서 프론트 → 백엔드 API 호출이 CORS 오류 없이 성공한다 (백엔드가 이미 `FRONTEND_ORIGIN=http://localhost:5173`을 허용 중, `Access-Control-Allow-Origin` 헤더로 확인. 별도 Vite proxy 불필요)
 
 ---
 
@@ -422,25 +431,25 @@ flowchart LR
 - 401 인터셉터·부팅 silent refresh는 **FE-9에서 마감**(여기서는 기본 토큰 부착까지)
 
 **완료 조건**
-- [ ] 로그인 성공 시 두 토큰이 스토어에 보관되고 새로고침해도 유지된다
-- [ ] 인증 필요 API 호출 시 `Authorization` 헤더가 자동으로 붙는다
-- [ ] Pages/컴포넌트 코드에서 `fetch`를 직접 호출하는 곳이 없다(원칙 2절)
-- [ ] Zustand에 서버 데이터(이벤트·참여신청 목록 등)를 중복 보관하지 않는다
+- [x] 로그인 성공 시 두 토큰이 스토어에 보관되고 새로고침해도 유지된다 (`authStore.test.js` — zustand persist가 `localStorage`의 `auth-storage` 키에 기록함을 확인)
+- [x] 인증 필요 API 호출 시 `Authorization` 헤더가 자동으로 붙는다 (`client.test.js` — accessToken 존재 시 자동 부착, `auth:false` 지정 시 미부착 확인)
+- [x] Pages/컴포넌트 코드에서 `fetch`를 직접 호출하는 곳이 없다(원칙 2절) (`src/pages`, `src/App.jsx` grep 결과 0건, `src/api/client.js` 한 곳에서만 호출)
+- [x] Zustand에 서버 데이터(이벤트·참여신청 목록 등)를 중복 보관하지 않는다 (`authStore`는 accessToken/refreshToken/user만 보유. 이벤트·참여신청은 FE-2 범위상 TanStack Query로만 관리 예정)
 
 ---
 
-## FE-3. 공통 Toast (에러 코드 6종)
+## FE-3. 공통 Toast (에러 코드 7종)
 
 **선행 Task**: FE-2
 
 **작업 내용**
 - `src/components/Toast.jsx`: 공통 에러 표시 1개. 서버 에러 응답의 `error.code`/`error.message`를 그대로 사용자에게 표시
-- 6개 코드(`DUPLICATE_ENTRY`/`TARGET_TYPE_MISMATCH`/`EVENT_CLOSED`/`CONSENT_REQUIRED`/`VALIDATION_ERROR`/`INTERNAL_ERROR`) 모두 이 컴포넌트로 처리
+- 7개 코드(`DUPLICATE_ENTRY`/`TARGET_TYPE_MISMATCH`/`EVENT_CLOSED`/`CONSENT_REQUIRED`/`EVENT_HAS_ENTRIES`/`VALIDATION_ERROR`/`INTERNAL_ERROR`) 모두 이 컴포넌트로 처리
 
 **완료 조건**
-- [ ] 6종 에러 코드가 모두 동일한 Toast로 표시된다
-- [ ] 화면마다 별도 에러 UI를 만들지 않았다
-- [ ] `INTERNAL_ERROR` 발생 시 사용자에게 스택·내부 정보가 노출되지 않는다
+- [x] 7종 에러 코드가 모두 동일한 Toast로 표시된다 (`Toast.test.jsx` — 7개 코드 전부 동일한 `role="alert"` 컴포넌트로 렌더링 확인)
+- [x] 화면마다 별도 에러 UI를 만들지 않았다 (`main.jsx`에 `<Toast />` 1개만 마운트, `queryClient`의 `QueryCache`/`MutationCache` `onError`에서 전역 처리. `src/pages` grep 결과 에러 UI 0건)
+- [x] `INTERNAL_ERROR` 발생 시 사용자에게 스택·내부 정보가 노출되지 않는다 (`Toast.jsx`는 `error.code`/`error.message`만 읽고 `.stack`을 렌더링하지 않음. 백엔드 `errorHandler.js`도 스택 대신 고정 메시지만 응답. `Toast.test.jsx`에서 stack 미노출 확인)
 
 ---
 
@@ -454,13 +463,13 @@ flowchart LR
 - `pages/admin/AdminEventFormPage.jsx`: 등록/수정 공용. 참여 방식이 룰렛일 때만 경품(name/weight) 입력 영역 노출. 진행중 상태에서는 수정 불가 필드 비활성화
 
 **완료 조건**
-- [ ] 시드 관리자 계정으로 로그인해 이벤트 목록에 진입한다
-- [ ] 룰렛 게임형 선택 시에만 경품 입력 영역이 나타난다
-- [ ] 경품 행 추가/삭제가 동작하고 `weight`에 0/음수 입력 시 안내가 뜬다
-- [ ] 진행중 이벤트 수정 화면에서 참여대상유형·참여방식·시작일시 입력칸이 비활성화된다
-- [ ] 종료 버튼 클릭 → 확인 후 상태가 `종료`로 바뀌고 목록에 반영된다
-- [ ] 종료된 이벤트에는 종료 버튼이 노출되지 않는다
-- [ ] **브라우저에서 관리자 로그인 → 룰렛 이벤트 등록 → 목록 확인 → 종료까지 관리자 화면만으로 완결된다**(PRD 1일차 완료 기준)
+- [x] 시드 관리자 계정으로 로그인해 이벤트 목록에 진입한다 (Playwright로 실제 브라우저에서 `ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD`로 로그인 → `/admin/events` 진입 확인)
+- [x] 룰렛 게임형 선택 시에만 경품 입력 영역이 나타난다 (`AdminEventFormPage.test.jsx` + 브라우저 확인)
+- [x] 경품 행 추가/삭제가 동작하고 `weight`에 0/음수 입력 시 안내가 뜬다 (단위 테스트 + 브라우저에서 weight=0 입력 시 "weight는 1 이상의 정수여야 합니다." 즉시 노출 확인)
+- [x] 진행중 이벤트 수정 화면에서 참여대상유형·참여방식·시작일시 입력칸이 비활성화된다 (`AdminEventFormPage.test.jsx` — ONGOING 이벤트 조회 시 해당 필드 `disabled` 확인, 경품 영역도 함께 잠김)
+- [x] 종료 버튼 클릭 → 확인 후 상태가 `종료`로 바뀌고 목록에 반영된다 (브라우저에서 확인 다이얼로그 → 종료 클릭 → 상태 배지가 `진행중`→`종료`로 즉시 갱신됨을 확인)
+- [x] 종료된 이벤트에는 종료 버튼이 노출되지 않는다 (브라우저에서 종료 직후 해당 행의 종료 버튼이 사라짐을 확인. 위 표에서는 등록/진행중 상태 모두 종료 버튼을 노출하고 실제 종료 가능 여부는 백엔드가 최종 판정하도록 위임)
+- [x] **브라우저에서 관리자 로그인 → 룰렛 이벤트 등록 → 목록 확인 → 종료까지 관리자 화면만으로 완결된다**(PRD 1일차 완료 기준) (Playwright로 로컬 dev 서버(프론트 5173/백엔드 3000) 대상 전체 플로우 1회 실행, 테스트 데이터는 종료 후 삭제)
 
 ---
 
@@ -474,11 +483,11 @@ flowchart LR
 - 0건일 때 "참여신청이 없습니다" 빈 상태 표시
 
 **완료 조건**
-- [ ] 이벤트 목록에서 특정 이벤트의 참여신청 목록으로 이동한다
-- [ ] 회원/비회원 참여 건이 구분되어 표시된다
-- [ ] 동의 시각과 확정 경품이 각 행에 표시된다
-- [ ] 참여신청 0건일 때 에러가 아니라 빈 상태 문구가 보인다
-- [ ] 엑셀 다운로드 버튼을 만들지 않았다(FR-2.6은 별도 Task(FE-14)에서 후행 구현)
+- [x] 이벤트 목록에서 특정 이벤트의 참여신청 목록으로 이동한다 (`AdminEventListPage`의 행 클릭 → `/admin/events/:eventId/entries`, FE-4에서 이미 구현된 이동 경로를 `AdminEntryListPage.test.jsx`에서 확인)
+- [x] 회원/비회원 참여 건이 구분되어 표시된다 (`entry.user` 존재 여부로 회원/비회원 분기, 테스트로 확인)
+- [x] 동의 시각과 확정 경품이 각 행에 표시된다 (`lib/format.js`의 `formatDateTime`로 MM-DD HH:mm 표시, `entry.prize?.name ?? '-'`)
+- [x] 참여신청 0건일 때 에러가 아니라 빈 상태 문구가 보인다 ("참여신청이 없습니다" 텍스트, 테이블 자체를 렌더링하지 않음)
+- [x] 엑셀 다운로드 버튼을 만들지 않았다(FR-2.6은 별도 Task(FE-14)에서 후행 구현) (다운로드/엑셀/CSV 버튼 부재를 테스트로 고정)
 
 ---
 
@@ -492,11 +501,11 @@ flowchart LR
 - 로그인 실패/이메일 중복 메시지 처리(S-6)
 
 **완료 조건**
-- [ ] 회원가입 후 해당 계정으로 로그인이 성공한다
-- [ ] 비밀번호 8자 미만 입력 시 제출 전 안내가 표시된다
-- [ ] 중복 이메일 가입 시 "이미 가입된 이메일입니다" 취지의 메시지가 뜬다
-- [ ] 로그인 실패 시 이메일/비밀번호 중 무엇이 틀렸는지 구분해 알려주지 않는다
-- [ ] 로그아웃 시 토큰이 지워지고 인증 필요 화면 접근이 차단된다
+- [x] 회원가입 후 해당 계정으로 로그인이 성공한다 (Playwright로 실제 브라우저에서 회원가입 → `/login` 이동 → 동일 계정 로그인 → `/` 진입까지 확인. 테스트 계정은 확인 후 DB에서 삭제)
+- [x] 비밀번호 8자 미만 입력 시 제출 전 안내가 표시된다 (`SignupPage.test.jsx` — 입력 중 즉시 안내 문구 노출 + 제출 버튼 비활성 확인)
+- [x] 중복 이메일 가입 시 "이미 가입된 이메일입니다" 취지의 메시지가 뜬다 (단위 테스트 + 브라우저에서 동일 이메일 재가입 시도 시 Toast로 정확히 이 문구가 뜨는 것을 확인)
+- [x] 로그인 실패 시 이메일/비밀번호 중 무엇이 틀렸는지 구분해 알려주지 않는다 (백엔드가 이미 단일 일반 메시지만 반환하므로 프론트는 그 메시지를 Toast로 그대로 표시할 뿐 별도 분기를 두지 않음, 테스트로 확인)
+- [x] 로그아웃 시 토큰이 지워지고 인증 필요 화면 접근이 차단된다 (`RequireAuth` 가드 + `MyEntriesPage`의 로그아웃 버튼. 단위 테스트와 브라우저 모두에서 로그아웃 후 `/mypage` 재접근이 `/login`으로 리다이렉트됨을 확인)
 
 ---
 
@@ -514,14 +523,14 @@ flowchart LR
 - `components/ConsentCheckbox.jsx`: 동의 문구 + **보유기간(이벤트 종료일로부터 1년) 고지**, 회원/비회원 공용
 
 **완료 조건**
-- [ ] 목록이 상단노출 → 마감임박순 → 동률 시 등록순으로 노출된다
-- [ ] 마감이 지난 이벤트에 `종료` 뱃지가 표시된다(S-10)
-- [ ] 로그인 상태·이벤트 대상유형 조합에 따라 3가지 분기가 각각 올바르게 렌더링된다
-- [ ] 동의 체크 전에는 참여 버튼이 비활성이다(S-2)
-- [ ] 동의 문구에 보유기간 1년이 고지된다
-- [ ] 회원 참여 화면에 개인정보 입력 폼이 나타나지 않는다
-- [ ] 종료된 이벤트 상세에서 참여가 시작되지 않는다
-- [ ] 중복 참여 시 Toast로 "이미 참여하셨습니다" 취지 메시지가 표시된다(S-4)
+- [x] 목록이 상단노출 → 마감임박순 → 동률 시 등록순으로 노출된다 (`GET /events`가 이미 이 순서로 정렬해 반환하므로 `EventListPage`는 응답 순서를 그대로 렌더링, 재정렬하지 않음을 테스트로 고정)
+- [x] 마감이 지난 이벤트에 `종료` 뱃지가 표시된다(S-10) (서버가 lazy 계산한 `status=CLOSED`를 `EVENT_STATUS_LABEL`로 표시)
+- [x] 로그인 상태·이벤트 대상유형 조합에 따라 3가지 분기가 각각 올바르게 렌더링된다 (①②③-1③-2 각각 단위 테스트 + 브라우저 E2E로 ②(비회원 입력 폼) 확인)
+- [x] 동의 체크 전에는 참여 버튼이 비활성이다(S-2) (단위 테스트 + 브라우저에서 체크 전 disabled 확인)
+- [x] 동의 문구에 보유기간 1년이 고지된다 (`ConsentCheckbox`에 "보유기간: 이벤트 종료일로부터 1년" 항상 노출)
+- [x] 회원 참여 화면에 개인정보 입력 폼이 나타나지 않는다 ("로그인 회원: {name} ({companyName})" 텍스트만 표시, 입력 필드 없음을 테스트로 확인)
+- [x] 종료된 이벤트 상세에서 참여가 시작되지 않는다 (`status !== ONGOING`이면 폼 자체를 렌더링하지 않음)
+- [x] 중복 참여 시 Toast로 "이미 참여하셨습니다" 취지 메시지가 표시된다(S-4) (단위 테스트 + 브라우저에서 동일 이메일 재참여 시도 시 정확히 이 문구가 Toast로 뜨는 것을 실기기 확인)
 
 ---
 
@@ -536,12 +545,12 @@ flowchart LR
 - "다시 돌리기" 버튼을 만들지 않음(재추첨 불가)
 
 **완료 조건**
-- [ ] 참여 직후 결과 화면으로 이동하고 경품명이 표시된다
-- [ ] 미당첨 결과가 에러 토스트가 아니라 정상 결과 문구로 표시된다
-- [ ] 캡처 안내 문구가 노출된다
-- [ ] 재시도/다시 돌리기 버튼이 화면에 존재하지 않는다(S-5)
-- [ ] 애니메이션이 결과를 결정하지 않는다(서버 확정값만 표시)
-- [ ] `prefers-reduced-motion` 설정 시 애니메이션이 과하게 동작하지 않는다
+- [x] 참여 직후 결과 화면으로 이동하고 경품명이 표시된다 (단위 테스트 + 브라우저에서 weight 100%인 경품으로 실제 당첨 확인)
+- [x] 미당첨 결과가 에러 토스트가 아니라 정상 결과 문구로 표시된다 ("아쉽게도 미당첨입니다"를 `role="alert"` 없이 일반 문구로 표시, 테스트로 확인)
+- [x] 캡처 안내 문구가 노출된다 (단위 테스트 + 브라우저 확인)
+- [x] 재시도/다시 돌리기 버튼이 화면에 존재하지 않는다(S-5) ("목록으로 돌아가기" 링크만 존재, 재시도 버튼 부재를 테스트로 고정)
+- [x] 애니메이션이 결과를 결정하지 않는다(서버 확정값만 표시) (결과는 `entriesApi.create` 응답(route state로 전달)을 그대로 표시할 뿐, 스피너 애니메이션은 지연 연출용 CSS일 뿐 값 계산에 관여하지 않음)
+- [x] `prefers-reduced-motion` 설정 시 애니메이션이 과하게 동작하지 않는다 (`prefers-reduced-motion: reduce`면 지연 없이 즉시 결과 표시 + `@media (prefers-reduced-motion: no-preference)`로 스핀 keyframe 자체를 격리, 테스트로 확인)
 
 ---
 
@@ -554,11 +563,11 @@ flowchart LR
 - `main.jsx`: 앱 부팅 시 저장된 Refresh가 있으면 먼저 재발급 시도(silent refresh), 완료 전까지 라우팅 대기. 실패 시 비로그인 상태로 시작
 
 **완료 조건**
-- [ ] Access 만료 상태에서 API 호출 시 사용자가 실패를 보지 않고 자동 재발급 후 성공한다
-- [ ] 새로고침 후에도 로그인 상태가 유지되고 로그인 화면으로 튕기지 않는다
-- [ ] 여러 요청이 동시에 401을 받아도 refresh 요청이 중복 발생하지 않는다
-- [ ] Refresh 재발급까지 실패하면 비로그인 상태로 전환되고 로그인 화면으로 안내된다
-- [ ] 쿠키를 사용하지 않는다
+- [x] Access 만료 상태에서 API 호출 시 사용자가 실패를 보지 않고 자동 재발급 후 성공한다 (`api/client.js`의 `authorizedFetch`가 401 응답 시 `/auth/refresh` 후 원 요청을 1회 재시도, 단위 테스트로 확인)
+- [x] 새로고침 후에도 로그인 상태가 유지되고 로그인 화면으로 튕기지 않는다 (`main.jsx`의 `bootstrapAuth`가 렌더링 전에 재발급을 먼저 완료. 실제 브라우저에서 로그인 후 새로고침 시 네트워크 로그에 `/auth/refresh`(200)→`/events` 순으로 호출되고 헤더의 로그인 사용자 표시가 유지됨을 확인)
+- [x] 여러 요청이 동시에 401을 받아도 refresh 요청이 중복 발생하지 않는다 (모듈 스코프의 `refreshPromise`를 동시 요청이 공유하도록 구현, 3개 동시 요청에서 `/auth/refresh`가 1회만 호출됨을 테스트로 확인)
+- [x] Refresh 재발급까지 실패하면 비로그인 상태로 전환되고 로그인 화면으로 안내된다 (재발급 실패 시 `clearAuth()` 호출 → `RequireAuth`/`RequireAdmin` 가드가 다음 렌더에서 자동으로 `/login`·`/admin/login`으로 리다이렉트. 단위 테스트로 상태 전환 확인)
+- [x] 쿠키를 사용하지 않는다 (`api/` 전체에 `credentials` 옵션·`document.cookie` 사용 0건, grep + 테스트로 확인)
 
 ---
 
@@ -574,11 +583,11 @@ flowchart LR
 - **관리자 백오피스는 반응형 대상에서 제외**
 
 **완료 조건**
-- [ ] 참여자용 화면 전부가 모바일 폭에서 가로 스크롤 없이 표시된다
-- [ ] 768px을 경계로 레이아웃이 의도대로 전환된다
-- [ ] 브레이크포인트를 768px 하나만 사용했다(태블릿 등 중간 단계 없음)
-- [ ] 관리자 화면에 반응형 작업을 하지 않았다
-- [ ] 실제 모바일 브라우저에서 참여 플로우가 정상 동작한다
+- [x] 참여자용 화면 전부가 모바일 폭에서 가로 스크롤 없이 표시된다 (375px 실브라우저에서 `document.documentElement.scrollWidth === clientWidth` 확인, EventListPage/EventDetailPage)
+- [x] 768px을 경계로 레이아웃이 의도대로 전환된다 (실브라우저에서 1024px 폭 시 `EventListPage`의 `.event-list-page__grid`가 `display:grid`로, `EventDetailPage`의 `.event-detail-page__body`가 2단(464px+464px)으로 전환됨을 computed style로 확인)
+- [x] 브레이크포인트를 768px 하나만 사용했다(태블릿 등 중간 단계 없음) (`src/test/responsive.test.js` — 관리자 외 전체 CSS를 정적 분석해 768px 외 너비 브레이크포인트가 없음을 자동 검증)
+- [x] 관리자 화면에 반응형 작업을 하지 않았다 (`src/test/responsive.test.js`에서 `admin/` 하위 CSS에 너비 브레이크포인트가 0건임을 확인)
+- [x] 실제 모바일 브라우저에서 참여 플로우가 정상 동작한다 (375px 뷰포트에서 비회원 단순 참여 이벤트에 실제로 참여 완료까지 진행, 테스트 데이터는 확인 후 삭제)
 
 ---
 

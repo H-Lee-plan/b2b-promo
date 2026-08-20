@@ -15,7 +15,7 @@
 | PRD | [../docs/3-prd.md](../docs/3-prd.md) | 기술스택, FR 목록, 일정 |
 | 프로젝트 구조 설계 원칙 | [../docs/5-project-principle.md](../docs/5-project-principle.md) | 레이어, 네이밍, 디렉토리 구조, 보안/운영 규칙 |
 | ERD | [../docs/8-erd.md](../docs/8-erd.md) | ERD (Mermaid) |
-| DDL | [../docs/8-schema.sql](../docs/8-schema.sql) | 실제 DDL (`backend/src/db/schema.sql`와 동일 내용) |
+| DDL | [../docs/8-schema.sql](../docs/8-schema.sql) | 실제 DDL (`backend/src/infrastructure/db/schema.sql`와 동일 내용) |
 | 실행 계획 | [../docs/9-plan.md](../docs/9-plan.md) | Task 단위 분해, 완료조건 |
 | API 스펙 | [../docs/swagger.json](../docs/swagger.json) | OpenAPI 3.0 스펙 (초기 구현 범위 API만) |
 
