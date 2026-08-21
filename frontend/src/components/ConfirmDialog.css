@@ -15,7 +15,7 @@
   transition:
     transform var(--duration-base) var(--ease-out),
     opacity var(--duration-base) var(--ease-out);
-  background: var(--color-bg);
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   padding: var(--space-5);

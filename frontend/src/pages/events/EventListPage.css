@@ -45,12 +45,15 @@
 
 .event-card {
   display: block;
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   padding: var(--space-4);
   text-decoration: none;
   color: var(--color-text);
-  transition: box-shadow var(--duration-fast) var(--ease-out);
+  transition:
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 .event-card--pinned {
@@ -61,6 +64,7 @@
 @media (hover: hover) {
   .event-card:hover {
     box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
   }
 }
 

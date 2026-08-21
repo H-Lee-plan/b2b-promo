@@ -26,7 +26,7 @@
 | `docs/8-erd.md` | ERD (Mermaid) | 최신 v1.2 |
 | `docs/8-schema.sql` | 실제 DDL (`backend/src/infrastructure/db/schema.sql`와 동일 내용) | |
 | `docs/9-plan.md` | 실행 계획 — Task 단위 분해, 선행 Task, 체크박스 완료조건 | 최신 v1.18, 작업 진행 시 이 문서의 체크박스를 갱신할 것 |
-| `docs/10-style.md` | 스타일 가이드 (색상·타이포그래피·간격·컴포넌트·모션 규칙) | 최신 v1.4. FE 작업 시 참고 |
+| `docs/10-style.md` | 스타일 가이드 (색상·타이포그래피·간격·컴포넌트·모션 규칙) | 최신 v1.5. FE 작업 시 참고 |
 | `docs/swagger.json` | OpenAPI 3.0 스펙 (초기 구현 범위 API만) | |
 | `asset/` | 와이어프레임 등 시각 자료(SVG) | |
 

@@ -24,8 +24,9 @@
   --color-warning-500: #d97706; /* 주의(예: weight 검증 경고) */
   --color-amber-500: #f59e0b; /* 당첨(WON) 강조 전용 */
 
-  --color-bg: #ffffff;
-  --color-surface: var(--color-gray-50);
+  /* 페이지 캔버스는 은은한 톤, 카드/모달 같은 표면은 흰색으로 띄운다 */
+  --color-bg: var(--color-gray-50);
+  --color-surface: #ffffff;
   --color-border: var(--color-gray-200);
   --color-text: var(--color-gray-900);
   --color-text-muted: var(--color-gray-500);

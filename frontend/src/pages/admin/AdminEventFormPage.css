@@ -1,7 +1,10 @@
 .admin-event-form {
   max-width: 720px;
-  margin: 0 auto;
+  margin: var(--space-6) auto;
   padding: var(--space-6);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -16,6 +19,7 @@
 
 .admin-event-form input[type='text'],
 .admin-event-form input:not([type='radio']):not([type='checkbox']) {
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);

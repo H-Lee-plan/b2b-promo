@@ -32,8 +32,15 @@
   cursor: pointer;
 }
 
-.admin-table tbody tr:nth-child(even) {
+.admin-table {
   background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.admin-table tbody tr:nth-child(even) {
+  background: var(--color-gray-50);
 }
 
 .admin-event-list__actions {
