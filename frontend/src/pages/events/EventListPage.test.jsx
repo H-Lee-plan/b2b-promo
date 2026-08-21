@@ -45,10 +45,13 @@ describe('EventListPage', () => {
     ]);
   });
 
-  it('상단노출 이벤트에 ★ 표시가 붙는다', async () => {
+  it('상단노출 이벤트는 박스 강조 스타일이 적용되고 문구는 노출되지 않는다', async () => {
     eventsApi.list.mockResolvedValue(SORTED_EVENTS);
     renderPage();
-    expect(await screen.findByText('★ 상단노출')).toBeInTheDocument();
+    await screen.findByText('여름맞이 룰렛대전');
+    const pinnedCard = screen.getByText('여름맞이 룰렛대전').closest('a');
+    expect(pinnedCard).toHaveClass('event-card--pinned');
+    expect(screen.queryByText(/상단노출/)).not.toBeInTheDocument();
   });
 
   it('마감이 지난 이벤트에 종료 뱃지가 표시된다(S-10)', async () => {

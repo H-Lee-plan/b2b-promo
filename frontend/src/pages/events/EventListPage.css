@@ -6,8 +6,10 @@
 
 .event-list-page__header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
   margin-bottom: var(--space-5);
 }
 
@@ -41,6 +43,7 @@
 
 .event-card--pinned {
   border: 1px solid var(--color-primary-500);
+  background: var(--color-primary-50);
 }
 
 @media (hover: hover) {
@@ -49,16 +52,16 @@
   }
 }
 
-.event-card__pin {
-  display: block;
-  color: var(--color-primary-600);
-  font-size: var(--text-caption, 0.75rem);
-  margin-bottom: var(--space-1);
-}
-
 .event-card__title {
   font: 600 var(--text-h2, 1.25rem)/1.35 var(--font-sans);
   margin: 0 0 var(--space-2);
+}
+
+.event-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 
 .event-card__meta {

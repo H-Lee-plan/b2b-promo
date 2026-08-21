@@ -32,7 +32,7 @@ function ConsentNoteCell({ eventId, entry }) {
     return (
       <div className="admin-entry-list__consent-note">
         <span>{entry.consentNote || '-'}</span>
-        <button type="button" onClick={startEditing}>
+        <button type="button" className="button button--secondary button--small" onClick={startEditing}>
           편집
         </button>
       </div>
@@ -42,10 +42,15 @@ function ConsentNoteCell({ eventId, entry }) {
   return (
     <div className="admin-entry-list__consent-note">
       <input value={value} onChange={(event) => setValue(event.target.value)} />
-      <button type="button" onClick={() => mutation.mutate(value)} disabled={mutation.isPending}>
+      <button
+        type="button"
+        className="button button--primary button--small"
+        onClick={() => mutation.mutate(value)}
+        disabled={mutation.isPending}
+      >
         저장
       </button>
-      <button type="button" onClick={() => setEditing(false)}>
+      <button type="button" className="button button--secondary button--small" onClick={() => setEditing(false)}>
         취소
       </button>
     </div>

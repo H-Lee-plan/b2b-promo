@@ -5,6 +5,11 @@
   text-align: center;
 }
 
+.admin-login h1 {
+  font-size: 1.375rem;
+  white-space: nowrap;
+}
+
 .admin-login form {
   display: flex;
   flex-direction: column;

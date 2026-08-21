@@ -248,13 +248,17 @@ export default function AdminEventFormPage() {
                 onChange={(event) => updatePrize(index, 'weight', event.target.value)}
                 required
               />
-              <button type="button" onClick={() => removePrize(index)}>
+              <button
+                type="button"
+                className="button button--secondary button--small"
+                onClick={() => removePrize(index)}
+              >
                 삭제
               </button>
               {prizeErrors[index] && <p className="field-error">{prizeErrors[index]}</p>}
             </div>
           ))}
-          <button type="button" onClick={addPrize}>
+          <button type="button" className="button button--secondary button--small" onClick={addPrize}>
             + 경품 추가
           </button>
         </fieldset>
@@ -271,13 +275,17 @@ export default function AdminEventFormPage() {
                 onChange={(event) => updateFormField(index, event.target.value)}
                 required
               />
-              <button type="button" onClick={() => removeFormField(index)}>
+              <button
+                type="button"
+                className="button button--secondary button--small"
+                onClick={() => removeFormField(index)}
+              >
                 삭제
               </button>
             </div>
           ))}
           {formFieldError && <p className="field-error">{formFieldError}</p>}
-          <button type="button" onClick={addFormField}>
+          <button type="button" className="button button--secondary button--small" onClick={addFormField}>
             + 필드 추가
           </button>
         </fieldset>

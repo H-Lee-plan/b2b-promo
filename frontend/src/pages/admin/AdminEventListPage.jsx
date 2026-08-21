@@ -28,22 +28,32 @@ function EventRow({ event, onRowClick, onEdit, onRequestClose, onRequestDelete }
       <td>{entryCount ?? '-'}</td>
       <td>{event.isPinned ? '★' : ''}</td>
       <td onClick={(clickEvent) => clickEvent.stopPropagation()}>
-        <button type="button" onClick={() => onEdit(event.id)}>
-          수정
-        </button>
-        {event.status !== 'CLOSED' && (
-          <button type="button" className="button button--danger" onClick={() => onRequestClose(event)}>
-            종료
+        <div className="admin-event-list__actions">
+          <button
+            type="button"
+            className="button button--secondary button--small"
+            onClick={() => onEdit(event.id)}
+          >
+            수정
           </button>
-        )}
-        <button
-          type="button"
-          className="button button--danger"
-          onClick={() => onRequestDelete(event)}
-          disabled={!canDelete}
-        >
-          삭제
-        </button>
+          {event.status !== 'CLOSED' && (
+            <button
+              type="button"
+              className="button button--danger button--small"
+              onClick={() => onRequestClose(event)}
+            >
+              종료
+            </button>
+          )}
+          <button
+            type="button"
+            className="button button--danger button--small"
+            onClick={() => onRequestDelete(event)}
+            disabled={!canDelete}
+          >
+            삭제
+          </button>
+        </div>
       </td>
     </tr>
   );

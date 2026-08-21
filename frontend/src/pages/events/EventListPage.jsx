@@ -2,7 +2,12 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi } from '../../api/eventsApi.js';
 import { useAuthStore } from '../../store/authStore.js';
-import { EVENT_STATUS_LABEL, EVENT_STATUS_TONE } from '../../constants/statusLabels.js';
+import {
+  EVENT_STATUS_LABEL,
+  EVENT_STATUS_TONE,
+  TARGET_TYPE_LABEL,
+  TARGET_TYPE_TONE,
+} from '../../constants/statusLabels.js';
 import Badge from '../../components/Badge.jsx';
 import { formatDday } from '../../lib/format.js';
 import './EventListPage.css';
@@ -26,11 +31,13 @@ export default function EventListPage() {
             to={`/events/${event.id}`}
             className={`event-card${event.isPinned ? ' event-card--pinned' : ''}`}
           >
-            {event.isPinned && <span className="event-card__pin">★ 상단노출</span>}
             <p className="event-card__title">{event.title}</p>
+            <div className="event-card__badges">
+              <Badge tone={TARGET_TYPE_TONE[event.targetType]}>{TARGET_TYPE_LABEL[event.targetType]}</Badge>
+              <Badge tone={EVENT_STATUS_TONE[event.status]}>{EVENT_STATUS_LABEL[event.status]}</Badge>
+            </div>
             <div className="event-card__meta">
               <span>{formatDday(event.endAt, event.status)}</span>
-              <Badge tone={EVENT_STATUS_TONE[event.status]}>{EVENT_STATUS_LABEL[event.status]}</Badge>
             </div>
           </Link>
         ))}

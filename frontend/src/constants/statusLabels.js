@@ -6,4 +6,5 @@ export const ENTRY_STATUS_LABEL = { APPLIED: '신청완료', CANCELED: '취소',
 export const ENTRY_STATUS_TONE = { APPLIED: 'primary', CANCELED: 'muted', WON: 'amber', LOST: 'neutral' };
 
 export const TARGET_TYPE_LABEL = { MEMBER_ONLY: '회원 전용', GUEST_ONLY: '비회원 전용', COMMON: '공통' };
+export const TARGET_TYPE_TONE = { MEMBER_ONLY: 'primary', GUEST_ONLY: 'neutral', COMMON: 'muted' };
 export const PARTICIPATION_TYPE_LABEL = { SIMPLE: '단순 참여', FORM: '폼 제출형', ROULETTE: '룰렛 게임형' };
