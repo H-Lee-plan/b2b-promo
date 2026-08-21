@@ -109,7 +109,7 @@ describe('EventDetailPage', () => {
     fireEvent.change(screen.getByLabelText('이메일'), { target: { value: 'kim@corp.co.kr' } });
     expect(screen.getByRole('button', { name: '참여하기' })).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText('연락처'), { target: { value: '010-1234-5678' } });
+    fireEvent.change(screen.getByLabelText('연락처'), { target: { value: '01012345678' } });
     fireEvent.click(screen.getByRole('checkbox'));
     expect(screen.getByRole('button', { name: '참여하기' })).not.toBeDisabled();
   });
@@ -122,7 +122,7 @@ describe('EventDetailPage', () => {
     fireEvent.change(screen.getByLabelText('업체명'), { target: { value: 'OO식자재' } });
     fireEvent.change(screen.getByLabelText('담당자명'), { target: { value: '김담당' } });
     fireEvent.change(screen.getByLabelText('이메일'), { target: { value: 'kim@corp.co.kr' } });
-    fireEvent.change(screen.getByLabelText('연락처'), { target: { value: '010-1234-5678' } });
+    fireEvent.change(screen.getByLabelText('연락처'), { target: { value: '01012345678' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '참여하기' }));
 
@@ -130,8 +130,8 @@ describe('EventDetailPage', () => {
       expect(entriesApi.create).toHaveBeenCalledWith('e1', {
         consent: true,
         guestEmail: 'kim@corp.co.kr',
-        guestPhone: '010-1234-5678',
-        guestInfo: { companyName: 'OO식자재', name: '김담당', phone: '010-1234-5678' },
+        guestPhone: '01012345678',
+        guestInfo: { companyName: 'OO식자재', name: '김담당', phone: '01012345678' },
       }),
     );
     expect(await screen.findByText('참여가 완료되었습니다.')).toBeInTheDocument();

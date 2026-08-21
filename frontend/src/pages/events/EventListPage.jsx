@@ -20,7 +20,10 @@ export default function EventListPage() {
   return (
     <div className="event-list-page">
       <header className="event-list-page__header">
-        <h1>온리원이벤트</h1>
+        <div className="event-list-page__brand">
+          <img src="/favicon.png" alt="" className="event-list-page__logo" />
+          <h1>온리원이벤트</h1>
+        </div>
         {user ? <Link to="/mypage">{user.name}</Link> : <Link to="/login">로그인</Link>}
       </header>
 

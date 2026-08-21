@@ -10,6 +10,7 @@ import Badge from '../../components/Badge.jsx';
 import ConsentCheckbox from '../../components/ConsentCheckbox.jsx';
 import FormFieldsInput from '../../components/FormFieldsInput.jsx';
 import { formatDateTime } from '../../lib/format.js';
+import { FIELD_MAX_LENGTH, isValidEmail, isValidPhone, sanitizePhoneInput } from '../../lib/validators.js';
 import '../../styles/button.css';
 import './EventDetailPage.css';
 
@@ -77,8 +78,15 @@ export default function EventDetailPage() {
 
   const mismatch = isTargetTypeMismatch(event.targetType, isLoggedIn);
   const isOngoing = event.status === EVENT_STATUS.ONGOING;
+  const guestEmailError =
+    guestForm.email.length > 0 && !isValidEmail(guestForm.email) ? '올바른 이메일 형식이 아닙니다.' : null;
+  const guestPhoneError =
+    guestForm.phone.length > 0 && !isValidPhone(guestForm.phone) ? '연락처는 숫자 10~11자리로 입력해주세요.' : null;
   const guestFormComplete =
-    Boolean(guestForm.companyName) && Boolean(guestForm.name) && Boolean(guestForm.email) && Boolean(guestForm.phone);
+    Boolean(guestForm.companyName) &&
+    Boolean(guestForm.name) &&
+    isValidEmail(guestForm.email) &&
+    isValidPhone(guestForm.phone);
 
   return (
     <div className="event-detail-page">
@@ -153,12 +161,20 @@ export default function EventDetailPage() {
               <input
                 value={guestForm.companyName}
                 onChange={(event) => updateGuestField('companyName', event.target.value)}
+                placeholder="예: 온리원상사"
+                maxLength={FIELD_MAX_LENGTH.companyName}
                 required
               />
             </label>
             <label>
               담당자명
-              <input value={guestForm.name} onChange={(event) => updateGuestField('name', event.target.value)} required />
+              <input
+                value={guestForm.name}
+                onChange={(event) => updateGuestField('name', event.target.value)}
+                placeholder="예: 홍길동"
+                maxLength={FIELD_MAX_LENGTH.name}
+                required
+              />
             </label>
             <label>
               이메일
@@ -166,12 +182,23 @@ export default function EventDetailPage() {
                 type="email"
                 value={guestForm.email}
                 onChange={(event) => updateGuestField('email', event.target.value)}
+                placeholder="example@company.com"
+                maxLength={FIELD_MAX_LENGTH.email}
                 required
               />
+              {guestEmailError && <p className="field-error">{guestEmailError}</p>}
             </label>
             <label>
               연락처
-              <input value={guestForm.phone} onChange={(event) => updateGuestField('phone', event.target.value)} required />
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={guestForm.phone}
+                onChange={(event) => updateGuestField('phone', sanitizePhoneInput(event.target.value))}
+                placeholder="숫자만 입력 (예: 01012345678)"
+                required
+              />
+              {guestPhoneError && <p className="field-error">{guestPhoneError}</p>}
             </label>
             {isFormType && <FormFieldsInput fields={event.formFields} values={formData} onChange={updateFormDataField} />}
             <ConsentCheckbox variant="guest" checked={consent} onChange={setConsent} />

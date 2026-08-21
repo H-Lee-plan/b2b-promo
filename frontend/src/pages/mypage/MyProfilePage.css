@@ -27,9 +27,3 @@
   padding: var(--space-2) var(--space-3);
   font: 400 var(--text-body, 1rem) var(--font-sans);
 }
-
-.field-error {
-  color: var(--color-danger-500);
-  font-size: var(--text-small, 0.875rem);
-  margin: 0;
-}

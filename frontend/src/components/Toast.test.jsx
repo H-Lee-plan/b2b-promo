@@ -48,15 +48,22 @@ describe('Toast', () => {
     expect(alertEl.textContent).not.toContain(internalError.stack);
   });
 
-  it('에러 Toast는 자동으로 닫히지 않고 닫기 버튼으로만 닫힌다', () => {
+  it('에러 Toast는 닫기 버튼으로 즉시 닫을 수 있다', () => {
+    render(<Toast />);
+    act(() => showError({ code: 'DUPLICATE_ENTRY', message: '중복 신청' }));
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('에러 Toast도 4초 후 자동으로 닫힌다', () => {
     vi.useFakeTimers();
     render(<Toast />);
     act(() => showError({ code: 'DUPLICATE_ENTRY', message: '중복 신청' }));
 
-    act(() => vi.advanceTimersByTime(10000));
     expect(screen.getByRole('alert')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+    act(() => vi.advanceTimersByTime(4000));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 

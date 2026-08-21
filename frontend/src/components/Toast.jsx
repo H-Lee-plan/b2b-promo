@@ -15,8 +15,6 @@ export default function Toast() {
       return undefined;
     }
     const frame = requestAnimationFrame(() => setVisible(true));
-    // 에러는 사용자가 직접 닫을 때까지 유지, 그 외(성공)만 자동으로 닫는다.
-    if (toast.variant === 'error') return () => cancelAnimationFrame(frame);
     const timer = setTimeout(hideToast, AUTO_DISMISS_MS);
     return () => {
       cancelAnimationFrame(frame);

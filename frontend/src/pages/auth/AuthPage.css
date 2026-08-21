@@ -38,9 +38,3 @@
   outline: 2px solid var(--color-primary-50);
   border-color: var(--color-primary-500);
 }
-
-.field-error {
-  color: var(--color-danger-500);
-  font-size: var(--text-small, 0.875rem);
-  margin: 0;
-}

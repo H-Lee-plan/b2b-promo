@@ -72,3 +72,10 @@ body {
   color: var(--color-text);
   margin: 0;
 }
+
+/* 입력칸 검증 에러 문구(3곳 이상에서 재사용되어 공용으로 이동, 5-project-principle.md 1절 기준) */
+.field-error {
+  color: var(--color-danger-500);
+  font-size: var(--text-small, 0.875rem);
+  margin: 0;
+}

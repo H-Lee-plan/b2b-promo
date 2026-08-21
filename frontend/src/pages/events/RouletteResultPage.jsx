@@ -33,10 +33,11 @@ export default function RouletteResultPage() {
   return (
     <div className="roulette-result-page">
       {eventTitle && <h1>{eventTitle}</h1>}
-      <div
-        className={`roulette-result-page__spinner${!showResult ? ' roulette-result-page__spinner--spinning' : ''}`}
-        aria-hidden="true"
-      />
+      <div className="roulette-wheel" aria-hidden="true">
+        <div className="roulette-wheel__pointer" />
+        <div className={`roulette-wheel__disc${!showResult ? ' roulette-wheel__disc--spinning' : ''}`} />
+        <div className="roulette-wheel__hub" />
+      </div>
       {showResult && (
         <>
           <p className="roulette-result-page__message">

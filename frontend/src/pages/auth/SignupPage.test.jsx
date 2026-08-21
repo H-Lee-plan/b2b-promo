@@ -28,7 +28,7 @@ function fillValidForm() {
   fireEvent.change(screen.getByLabelText('비밀번호'), { target: { value: 'password1' } });
   fireEvent.change(screen.getByLabelText('업체명'), { target: { value: 'OO식자재' } });
   fireEvent.change(screen.getByLabelText('담당자명'), { target: { value: '김담당' } });
-  fireEvent.change(screen.getByLabelText('연락처'), { target: { value: '010-1234-5678' } });
+  fireEvent.change(screen.getByLabelText('연락처'), { target: { value: '01012345678' } });
 }
 
 describe('SignupPage', () => {
@@ -56,7 +56,7 @@ describe('SignupPage', () => {
         password: 'password1',
         companyName: 'OO식자재',
         name: '김담당',
-        phone: '010-1234-5678',
+        phone: '01012345678',
       }),
     );
     expect(await screen.findByText('로그인 화면')).toBeInTheDocument();

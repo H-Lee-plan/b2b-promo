@@ -78,6 +78,6 @@ describe('RouletteResultPage', () => {
     renderWithEntry({ status: 'WON', prize: { name: '상품권' } });
 
     expect(await screen.findByText('축하합니다! "상품권" 당첨')).toBeInTheDocument();
-    expect(document.querySelector('.roulette-result-page__spinner--spinning')).not.toBeInTheDocument();
+    expect(document.querySelector('.roulette-wheel__disc--spinning')).not.toBeInTheDocument();
   });
 });
