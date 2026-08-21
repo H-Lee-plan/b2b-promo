@@ -7,6 +7,7 @@
 | v1.1 | 2026-08-20 | 8절 "참여자용 9개 화면" 오기 수정 — 실제로 나열된 화면 수(7개: 로그인/회원가입/목록/상세/룰렛결과+마이페이지 2개)와 맞지 않던 것을 바로잡음(10절 화면 매핑표 전체 화면 수 9와 착오) |
 | v1.2 | 2026-08-20 | 백엔드 실구현 대비 정합성 감사 반영: 에러 코드가 실제로는 7종(`EVENT_HAS_ENTRIES` 포함)인데 "6개/6종"으로 남아있던 Toast 절 서술 수정 |
 | v1.3 | 2026-08-20 | 프론트엔드 FE-1~FE-14 완료에 따른 정합성 감사 반영: (1) 11절이 언급한 `frontend/src/styles/global.css`가 실제로는 만들어지지 않았고 `tokens.css`+`button.css` 구조로 구현된 사실을 반영, (2) 10절 화면 매핑표에서 별도 화면으로 만들지 않은 `AdminConsentNotePage`를 `AdminEntryListPage` 인라인 편집 행으로 교체 |
+| v1.4 | 2026-08-21 | 초기 디자인 완성도가 기대에 못 미친다는 피드백에 따라 빠른 리스킨 진행: (1) 중립색을 zinc 스케일로, 브랜드색을 파란색에서 인디고 계열로 교체, (2) 시스템 폰트 대신 Pretendard 웹폰트 적용(3절의 "웹폰트 로딩 없음" 방침 변경), (3) radius/shadow를 소폭 키워 카드·버튼이 더 또렷해 보이도록 조정. 컴포넌트 구조·레이아웃은 그대로 두고 토큰 값만 교체한 것이라 4절 이후 규칙(모션, 컴포넌트 스펙 등)은 변경 없음 |
 
 - 관련 문서: [3-prd.md](./3-prd.md)(PRD, 기술스택·화면 목록), [5-project-principle.md](./5-project-principle.md)(코드 구조 원칙), [7-wireframe.md](./7-wireframe.md)(화면별 와이어프레임)
 - **이 문서의 역할**: FE Task(FE-1~FE-14) 착수 시 화면을 실제로 그릴 때 참조하는 시각·모션 규칙을 정한다. 와이어프레임(7절)이 "어디에 무엇이 있는지"를 정했다면, 이 문서는 "그것이 어떻게 보이고 어떻게 반응하는지"를 정한다. 새로운 기능이나 화면을 추가하지 않으며, 충돌 시 도메인 정의서 → PRD → 프로젝트 구조 원칙이 우선한다.
@@ -31,23 +32,23 @@ CSS 커스텀 프로퍼티로 선언하고 다크모드는 도입하지 않는�
 
 ```css
 :root {
-  /* 중립 */
-  --color-gray-50:  #F9FAFB;
-  --color-gray-100: #F3F4F6;
-  --color-gray-200: #E5E7EB;
-  --color-gray-300: #D1D5DB;
-  --color-gray-400: #9CA3AF;
-  --color-gray-500: #6B7280;
-  --color-gray-600: #4B5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1F2937;
-  --color-gray-900: #111827;
+  /* 중립(zinc 스케일) */
+  --color-gray-50:  #FAFAFA;
+  --color-gray-100: #F4F4F5;
+  --color-gray-200: #E4E4E7;
+  --color-gray-300: #D4D4D8;
+  --color-gray-400: #A1A1AA;
+  --color-gray-500: #71717A;
+  --color-gray-600: #52525B;
+  --color-gray-700: #3F3F46;
+  --color-gray-800: #27272A;
+  --color-gray-900: #18181B;
 
   /* 브랜드 강조(버튼/링크/진행중 상태) */
-  --color-primary-50:  #EFF6FF;
-  --color-primary-500: #3B82F6;
-  --color-primary-600: #2563EB;
-  --color-primary-700: #1D4ED8;
+  --color-primary-50:  #EEF2FF;
+  --color-primary-500: #6366F1;
+  --color-primary-600: #4F46E5;
+  --color-primary-700: #4338CA;
 
   /* 의미색 */
   --color-success-500: #16A34A; /* 저장/성공 토스트 */
@@ -81,12 +82,12 @@ CSS 커스텀 프로퍼티로 선언하고 다크모드는 도입하지 않는�
 
 ## 3. 타이포그래피
 
-시스템 폰트를 그대로 쓴다(웹폰트 로딩 없음 — apple-design 스킬 15절 "커스텀 폰트는 이유가 있을 때만"과 오버엔지니어링 금지 원칙이 같은 결론으로 수렴).
+Pretendard 웹폰트를 CDN(jsdelivr)으로 로드하고, 미로드 시에는 기존 시스템 폰트로 자연스럽게 폴백한다(v1.4 — 초기엔 "웹폰트 로딩 없음" 방침이었으나 리스킨 과정에서 한글 가독성·완성도를 위해 변경).
 
 ```css
 :root {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic",
-    "Apple SD Gothic Neo", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Malgun Gothic", "Apple SD Gothic Neo", Roboto, Helvetica, Arial, sans-serif;
 }
 body { font: 400 1rem/1.6 var(--font-sans); }
 ```
@@ -127,12 +128,12 @@ body { font: 400 1rem/1.6 var(--font-sans); }
 
 ```css
 :root {
-  --radius-sm: 6px;    /* 버튼, 인풋 */
-  --radius-md: 10px;   /* 카드 */
+  --radius-sm: 8px;    /* 버튼, 인풋 */
+  --radius-md: 12px;   /* 카드 */
   --radius-full: 999px;/* 배지, 필 버튼 */
 
-  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
-  --shadow-md: 0 8px 24px rgba(17, 24, 39, 0.12); /* 모달, 드롭다운 */
+  --shadow-sm: 0 1px 3px rgba(24, 24, 27, 0.08), 0 1px 2px rgba(24, 24, 27, 0.04);
+  --shadow-md: 0 10px 25px -5px rgba(24, 24, 27, 0.1), 0 8px 10px -6px rgba(24, 24, 27, 0.06); /* 모달, 드롭다운 */
 }
 ```
 
