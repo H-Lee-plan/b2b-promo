@@ -21,4 +21,15 @@ describe('App', () => {
     );
     expect(await screen.findByText('온리원이벤트')).toBeInTheDocument();
   });
+
+  it('정의되지 않은 경로는 404 안내 화면으로 대체된다', async () => {
+    window.history.pushState({}, '', '/no-such-route');
+    render(
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByText('페이지를 찾을 수 없습니다')).toBeInTheDocument();
+    window.history.pushState({}, '', '/');
+  });
 });

@@ -10,6 +10,7 @@ import AdminLoginPage from './pages/admin/AdminLoginPage.jsx';
 import AdminEventListPage from './pages/admin/AdminEventListPage.jsx';
 import AdminEventFormPage from './pages/admin/AdminEventFormPage.jsx';
 import AdminEntryListPage from './pages/admin/AdminEntryListPage.jsx';
+import NotFoundPage from './pages/common/NotFoundPage.jsx';
 import RequireAdmin from './components/RequireAdmin.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
 
@@ -36,6 +37,8 @@ export default function App() {
           <Route path="/admin/events/:eventId/edit" element={<AdminEventFormPage />} />
           <Route path="/admin/events/:eventId/entries" element={<AdminEntryListPage />} />
         </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );
