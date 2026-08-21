@@ -1,0 +1,414 @@
+PASS [SETUP] 관리자 로그인 :: {"status":200}
+PASS [S-8-exc1] 룰렛 이벤트를 경품 없이 등록 시도 시 거부 :: {"status":400,"code":"VALIDATION_ERROR","message":"룰렛 게임형은 경품이 1건 이상 필요합니다."}
+PASS [S-8-exc2] 경품 weight 0으로 등록 시도 시 거부 :: {"status":400,"code":"VALIDATION_ERROR"}
+PASS [S-8] 룰렛 이벤트 등록(경품 3건, 상단노출) :: {"status":201}
+PASS [S-3/S-6 준비] 회원 전용 단순참여 이벤트 등록 :: {"status":201}
+PASS [S-7 준비] 공통 단순참여 이벤트 등록(취소/재신청용) :: {"status":201}
+PASS [S-10 준비] 마감일 경과 이벤트 등록(lazy 종료 확인용) :: {"status":201}
+PASS [S-8-exc3] 진행중 이벤트의 참여대상유형 변경 시도 거부 :: {"status":400,"code":"VALIDATION_ERROR"}
+PASS [S-10] 마감 경과 이벤트가 목록에서 CLOSED로 lazy 계산됨 :: {"status":"CLOSED"}
+PASS [S-10] 마감 경과 이벤트 상세 status도 CLOSED :: {"status":"CLOSED"}
+PASS [S-10] 마감 경과 이벤트 참여 시도 EVENT_CLOSED 거부 :: {"status":409,"code":"EVENT_CLOSED"}
+PASS [S-2] 미동의 참여 시도 CONSENT_REQUIRED 거부 :: {"status":400,"code":"CONSENT_REQUIRED"}
+PASS [S-1] 비회원 룰렛 참여 골든패스(추첨 확정) :: {"status":201,"entryStatus":"LOST","prize":"미당첨"}
+PASS [S-1-검증] 미당첨 결과의 경품명이 정확히 "미당첨"으로 매핑됨(과거 발견된 버그 재발 확인) :: {"prize":"미당첨","entryStatus":"LOST"}
+PASS [S-4/S-5] 동일 이메일 중복 참여 시도 DUPLICATE_ENTRY 거부(재추첨 없음) :: {"status":409,"code":"DUPLICATE_ENTRY"}
+PASS [S-4 경합] 동시 중복 요청 시 정확히 1건만 성공(201+409) :: {"statuses":[201,409]}
+PASS [S-3] 비회원의 회원전용 이벤트 참여 시도 TARGET_TYPE_MISMATCH 거부 :: {"status":403,"code":"TARGET_TYPE_MISMATCH"}
+PASS [S-6] 회원가입 성공 :: {"status":201}
+PASS [S-6-exc1] 중복 이메일 가입 시도 거부 :: {"status":400,"code":"VALIDATION_ERROR"}
+PASS [S-6-exc2] 오답 비밀번호 로그인 거부 :: {"status":401,"message":"이메일 또는 비밀번호가 일치하지 않습니다."}
+PASS [S-6] 정상 로그인 성공(토큰 발급) :: {"status":200}
+PASS [S-6] 로그인한 회원의 회원전용 이벤트 참여(개인정보 입력 없이) 성공 :: {"status":201,"entryStatus":"APPLIED"}
+PASS [S-6-exc3] 동일 회원 재참여 DUPLICATE_ENTRY 거부 :: {"status":409,"code":"DUPLICATE_ENTRY"}
+PASS [S-7 준비] 회원의 단순참여 이벤트 참여 :: {"status":201}
+PASS [S-7 준비] 회원의 룰렛 이벤트 참여 :: {"status":201}
+PASS [S-7] 마이페이지 참여 내역 조회 :: {"status":200,"count":3}
+PASS [S-7] 룰렛 참여신청 취소 시도 서버가 거부(취소 불가 규칙) :: {"status":400,"code":"VALIDATION_ERROR","message":"룰렛 게임형 참여신청은 취소할 수 없습니다."}
+PASS [S-7] 단순참여 취소 성공 :: {"status":200,"entryStatus":"CANCELED"}
+PASS [S-7] 재참여 시 새 레코드 아닌 기존 레코드가 APPLIED로 복귀 :: {"status":201,"sameId":true,"entryStatus":"APPLIED"}
+PASS [보안] 인증 없이 이벤트 생성 시도 401 거부 :: {"status":401}
+PASS [보안] 일반 회원 토큰으로 이벤트 생성 시도 403 거부 :: {"status":403}
+PASS [S-6] Refresh Token으로 Access Token 재발급 성공 :: {"status":200}
+PASS [S-6] 회전 전(폐기된) Refresh Token 재사용 거부 :: {"status":401}
+PASS [S-6] 로그아웃 성공 :: {"status":204}
+PASS [S-6] 로그아웃 후 폐기된 Refresh Token 재사용 거부 :: {"status":401}
+PASS [S-9 준비] 종료 전 참여신청 목록 조회(관리자) :: {"status":200,"count":3}
+PASS [S-8] 관리자 조기 종료 처리 :: {"status":200,"eventStatus":"CLOSED"}
+PASS [S-9] 종료 직후 신규 참여 EVENT_CLOSED 즉시 거부 :: {"status":409,"code":"EVENT_CLOSED"}
+PASS [S-9] 종료 후 참여신청 건수 변동 없음 :: {"before":3,"after":3}
+PASS [S-9] 참여자 화면에서도 종료 상태로 조회됨 :: {"status":"CLOSED"}
+PASS [S-9] 참여신청 0건 이벤트는 빈 배열로 응답(오류 아님) :: {"status":200,"count":0}
+
+==== 요약 ====
+총 41건 중 통과 41건, 실패 0건
+
+__RESULTS_JSON_START__
+{
+  "rouletteEventId": "b9460414-58ab-434c-a899-2c56086d14a8",
+  "memberOnlyEventId": "b9c24d35-8b7c-40c4-ad87-f5193e447e02",
+  "commonSimpleEventId": "fc96f29d-f58c-4dfd-b703-2963920bd046",
+  "expiredEventId": "5d27dc13-e6fb-4b6e-bd20-cc26ae641d35",
+  "memberEmail": "member_6kj3fn@corp.co.kr",
+  "guestEmail": "guest_neakmv@corp.co.kr",
+  "results": [
+    {
+      "id": "SETUP",
+      "desc": "관리자 로그인",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "S-8-exc1",
+      "desc": "룰렛 이벤트를 경품 없이 등록 시도 시 거부",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "code": "VALIDATION_ERROR",
+        "message": "룰렛 게임형은 경품이 1건 이상 필요합니다."
+      }
+    },
+    {
+      "id": "S-8-exc2",
+      "desc": "경품 weight 0으로 등록 시도 시 거부",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "code": "VALIDATION_ERROR"
+      }
+    },
+    {
+      "id": "S-8",
+      "desc": "룰렛 이벤트 등록(경품 3건, 상단노출)",
+      "pass": true,
+      "detail": {
+        "status": 201
+      }
+    },
+    {
+      "id": "S-3/S-6 준비",
+      "desc": "회원 전용 단순참여 이벤트 등록",
+      "pass": true,
+      "detail": {
+        "status": 201
+      }
+    },
+    {
+      "id": "S-7 준비",
+      "desc": "공통 단순참여 이벤트 등록(취소/재신청용)",
+      "pass": true,
+      "detail": {
+        "status": 201
+      }
+    },
+    {
+      "id": "S-10 준비",
+      "desc": "마감일 경과 이벤트 등록(lazy 종료 확인용)",
+      "pass": true,
+      "detail": {
+        "status": 201
+      }
+    },
+    {
+      "id": "S-8-exc3",
+      "desc": "진행중 이벤트의 참여대상유형 변경 시도 거부",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "code": "VALIDATION_ERROR"
+      }
+    },
+    {
+      "id": "S-10",
+      "desc": "마감 경과 이벤트가 목록에서 CLOSED로 lazy 계산됨",
+      "pass": true,
+      "detail": {
+        "status": "CLOSED"
+      }
+    },
+    {
+      "id": "S-10",
+      "desc": "마감 경과 이벤트 상세 status도 CLOSED",
+      "pass": true,
+      "detail": {
+        "status": "CLOSED"
+      }
+    },
+    {
+      "id": "S-10",
+      "desc": "마감 경과 이벤트 참여 시도 EVENT_CLOSED 거부",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "code": "EVENT_CLOSED"
+      }
+    },
+    {
+      "id": "S-2",
+      "desc": "미동의 참여 시도 CONSENT_REQUIRED 거부",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "code": "CONSENT_REQUIRED"
+      }
+    },
+    {
+      "id": "S-1",
+      "desc": "비회원 룰렛 참여 골든패스(추첨 확정)",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "entryStatus": "LOST",
+        "prize": "미당첨"
+      }
+    },
+    {
+      "id": "S-1-검증",
+      "desc": "미당첨 결과의 경품명이 정확히 \"미당첨\"으로 매핑됨(과거 발견된 버그 재발 확인)",
+      "pass": true,
+      "detail": {
+        "prize": "미당첨",
+        "entryStatus": "LOST"
+      }
+    },
+    {
+      "id": "S-4/S-5",
+      "desc": "동일 이메일 중복 참여 시도 DUPLICATE_ENTRY 거부(재추첨 없음)",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "code": "DUPLICATE_ENTRY"
+      }
+    },
+    {
+      "id": "S-4 경합",
+      "desc": "동시 중복 요청 시 정확히 1건만 성공(201+409)",
+      "pass": true,
+      "detail": {
+        "statuses": [
+          201,
+          409
+        ]
+      }
+    },
+    {
+      "id": "S-3",
+      "desc": "비회원의 회원전용 이벤트 참여 시도 TARGET_TYPE_MISMATCH 거부",
+      "pass": true,
+      "detail": {
+        "status": 403,
+        "code": "TARGET_TYPE_MISMATCH"
+      }
+    },
+    {
+      "id": "S-6",
+      "desc": "회원가입 성공",
+      "pass": true,
+      "detail": {
+        "status": 201
+      }
+    },
+    {
+      "id": "S-6-exc1",
+      "desc": "중복 이메일 가입 시도 거부",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "code": "VALIDATION_ERROR"
+      }
+    },
+    {
+      "id": "S-6-exc2",
+      "desc": "오답 비밀번호 로그인 거부",
+      "pass": true,
+      "detail": {
+        "status": 401,
+        "message": "이메일 또는 비밀번호가 일치하지 않습니다."
+      }
+    },
+    {
+      "id": "S-6",
+      "desc": "정상 로그인 성공(토큰 발급)",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "S-6",
+      "desc": "로그인한 회원의 회원전용 이벤트 참여(개인정보 입력 없이) 성공",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "entryStatus": "APPLIED"
+      }
+    },
+    {
+      "id": "S-6-exc3",
+      "desc": "동일 회원 재참여 DUPLICATE_ENTRY 거부",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "code": "DUPLICATE_ENTRY"
+      }
+    },
+    {
+      "id": "S-7 준비",
+      "desc": "회원의 단순참여 이벤트 참여",
+      "pass": true,
+      "detail": {
+        "status": 201
+      }
+    },
+    {
+      "id": "S-7 준비",
+      "desc": "회원의 룰렛 이벤트 참여",
+      "pass": true,
+      "detail": {
+        "status": 201
+      }
+    },
+    {
+      "id": "S-7",
+      "desc": "마이페이지 참여 내역 조회",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "count": 3
+      }
+    },
+    {
+      "id": "S-7",
+      "desc": "룰렛 참여신청 취소 시도 서버가 거부(취소 불가 규칙)",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "code": "VALIDATION_ERROR",
+        "message": "룰렛 게임형 참여신청은 취소할 수 없습니다."
+      }
+    },
+    {
+      "id": "S-7",
+      "desc": "단순참여 취소 성공",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "entryStatus": "CANCELED"
+      }
+    },
+    {
+      "id": "S-7",
+      "desc": "재참여 시 새 레코드 아닌 기존 레코드가 APPLIED로 복귀",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "sameId": true,
+        "entryStatus": "APPLIED"
+      }
+    },
+    {
+      "id": "보안",
+      "desc": "인증 없이 이벤트 생성 시도 401 거부",
+      "pass": true,
+      "detail": {
+        "status": 401
+      }
+    },
+    {
+      "id": "보안",
+      "desc": "일반 회원 토큰으로 이벤트 생성 시도 403 거부",
+      "pass": true,
+      "detail": {
+        "status": 403
+      }
+    },
+    {
+      "id": "S-6",
+      "desc": "Refresh Token으로 Access Token 재발급 성공",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "S-6",
+      "desc": "회전 전(폐기된) Refresh Token 재사용 거부",
+      "pass": true,
+      "detail": {
+        "status": 401
+      }
+    },
+    {
+      "id": "S-6",
+      "desc": "로그아웃 성공",
+      "pass": true,
+      "detail": {
+        "status": 204
+      }
+    },
+    {
+      "id": "S-6",
+      "desc": "로그아웃 후 폐기된 Refresh Token 재사용 거부",
+      "pass": true,
+      "detail": {
+        "status": 401
+      }
+    },
+    {
+      "id": "S-9 준비",
+      "desc": "종료 전 참여신청 목록 조회(관리자)",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "count": 3
+      }
+    },
+    {
+      "id": "S-8",
+      "desc": "관리자 조기 종료 처리",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "eventStatus": "CLOSED"
+      }
+    },
+    {
+      "id": "S-9",
+      "desc": "종료 직후 신규 참여 EVENT_CLOSED 즉시 거부",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "code": "EVENT_CLOSED"
+      }
+    },
+    {
+      "id": "S-9",
+      "desc": "종료 후 참여신청 건수 변동 없음",
+      "pass": true,
+      "detail": {
+        "before": 3,
+        "after": 3
+      }
+    },
+    {
+      "id": "S-9",
+      "desc": "참여자 화면에서도 종료 상태로 조회됨",
+      "pass": true,
+      "detail": {
+        "status": "CLOSED"
+      }
+    },
+    {
+      "id": "S-9",
+      "desc": "참여신청 0건 이벤트는 빈 배열로 응답(오류 아님)",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "count": 0
+      }
+    }
+  ]
+}
+__RESULTS_JSON_END__
